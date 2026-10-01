@@ -1,0 +1,944 @@
+<title>Placement Hard Set</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a judge-style training log. Header with live stats, tab bar, then one working panel at a time. Tier colours borrow Codeforces rating colours. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --sunk:#E8ECF2; --ink:#121823; --muted:#5A6476; --line:#D8DEE7;
+  --accent:#1D4ED8; --accent-ink:#FFFFFF;
+  --t1:#1F5FD1; --t2:#9A1FCB; --t3:#D9480F;
+  --ac:#13804A; --ac-bg:#DDF3E6; --rev:#B45309; --rev-bg:#FBEBD3; --over:#C2252A;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E7EBF1; --muted:#97A2B4; --line:#273244;
+  --accent:#7EA2FF; --accent-ink:#0D1219;
+  --t1:#6E9DFF; --t2:#D07CFF; --t3:#FF8A4C;
+  --ac:#4ADE8F; --ac-bg:#123A26; --rev:#F5B256; --rev-bg:#3A2A12; --over:#FF6B6F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E7EBF1; --muted:#97A2B4; --line:#273244;
+  --accent:#7EA2FF; --accent-ink:#0D1219;
+  --t1:#6E9DFF; --t2:#D07CFF; --t3:#FF8A4C;
+  --ac:#4ADE8F; --ac-bg:#123A26; --rev:#F5B256; --rev-bg:#3A2A12; --over:#FF6B6F; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 120px}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:22px;font-weight:700}
+h3{font-size:17px;font-weight:700}
+p{margin:0}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:grid;gap:16px;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:end;padding-bottom:18px;border-bottom:1px solid var(--line)}
+header.top .lede{margin-top:10px;max-width:60ch;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.stat b{display:block;font-family:var(--f-mono);font-size:22px;font-variant-numeric:tabular-nums;font-weight:600}
+.tierbar{display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--sunk);margin-top:8px}
+.tierbar span{display:block;height:100%}
+
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:16px 0 18px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:8px;z-index:5}
+nav.tabs button{border:1px solid var(--line);background:var(--surface);padding:7px 13px;border-radius:99px;font-weight:600;font-size:14px}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.panel{display:grid;gap:16px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar .grow{flex:1 1 200px;min-width:0}
+.ctl{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px;font-size:14px}
+input.ctl{width:100%}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:600;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.dayhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px}
+.dayhead h2{font-size:clamp(24px,4vw,32px);font-weight:800}
+.dayinfo{display:flex;gap:16px;flex-wrap:wrap}
+.dayinfo div b{font-family:var(--f-mono);font-size:16px;display:block;font-variant-numeric:tabular-nums}
+
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .idx{font-family:var(--f-mono);color:var(--muted);font-size:12px;text-align:right}
+.row .main{min-width:0}
+.row .name{font-weight:600;text-decoration:none;color:var(--ink)}
+.row .name:hover{color:var(--accent);text-decoration:underline}
+.row .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;align-items:center;font-size:12px;color:var(--muted)}
+.row .acts{display:flex;gap:6px;align-items:center}
+.row.done .name{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.tier{font-family:var(--f-mono);font-weight:600;border-color:currentColor}
+.tier.t1{color:var(--t1)} .tier.t2{color:var(--t2)} .tier.t3{color:var(--t3)}
+.src{font-family:var(--f-mono);font-size:11px}
+.co{font-size:11px;font-family:var(--f-mono);color:var(--muted)}
+.status{min-width:78px;justify-content:center;border-radius:6px;padding:5px 8px;font-size:12px;background:var(--surface)}
+.status.ac{background:var(--ac-bg);color:var(--ac);border-color:transparent}
+.status.rev{background:var(--rev-bg);color:var(--rev);border-color:transparent}
+.go{border:1px solid var(--line);background:var(--sunk);border-radius:6px;padding:5px 9px;font-size:12px;font-weight:700;font-family:var(--f-mono)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.card ul{margin:0;padding-left:18px}
+.card li{margin:3px 0}
+.qcard{grid-template-columns:auto minmax(0,1fr);column-gap:12px}
+.qcard input{margin-top:5px;width:18px;height:18px;accent-color:var(--ac)}
+.qcard .ans{font-size:13px;color:var(--muted)}
+.qcard.done h3{text-decoration:line-through;color:var(--muted)}
+
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
+th{border-top:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-weight:700;white-space:nowrap}
+
+.note{background:var(--sunk);border-radius:var(--r);padding:12px 14px;font-size:13.5px;color:var(--muted)}
+.prose{display:grid;gap:10px;max-width:72ch}
+.prose ol,.prose ul{margin:0;padding-left:20px}
+.prose li{margin:4px 0}
+
+.timer{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--ink);color:var(--bg);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.timer .in{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.timer .tn{flex:1 1 220px;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer .clock{font-family:var(--f-mono);font-size:26px;font-variant-numeric:tabular-nums;font-weight:600}
+.timer .clock.over{color:var(--over)}
+.timer button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:14px}
+.timer .ok{background:var(--ac);color:var(--bg)}
+.timer .giv{background:var(--rev);color:var(--bg)}
+.timer .x{background:transparent;color:var(--bg);border:1px solid currentColor}
+
+@media (max-width:820px){
+  header.top{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:520px){
+  .row{grid-template-columns:minmax(0,1fr)}
+  .row .idx{display:none}
+  .row .acts{justify-content:flex-start}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="label">Placement prep · SDE + Quant · harder than the real OA</div>
+      <h1>Placement Hard Set</h1>
+      <p class="lede">A daily, timed grind of hard problems in the style of top SDE and quant firm online assessments. Pick 10, 12 or 15 a day, hit Start, and race the clock. Your progress saves in this browser.</p>
+    </div>
+    <div>
+      <div class="stats">
+        <div class="stat"><span class="label">Solved</span><b id="sSolved">0</b></div>
+        <div class="stat"><span class="label">Today</span><b id="sToday">0</b></div>
+        <div class="stat"><span class="label">Streak</span><b id="sStreak">0</b></div>
+        <div class="stat"><span class="label">Beat clock</span><b id="sBeat">–</b></div>
+      </div>
+      <div class="tierbar" id="tierbar" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="plan" aria-selected="true">Daily plan</button>
+    <button role="tab" data-tab="all" aria-selected="false">All problems</button>
+    <button role="tab" data-tab="quant" aria-selected="false">Quant puzzles</button>
+    <button role="tab" data-tab="companies" aria-selected="false">Company patterns</button>
+    <button role="tab" data-tab="trends" aria-selected="false">What's coming next</button>
+    <button role="tab" data-tab="howto" aria-selected="false">How to use</button>
+  </nav>
+
+  <!-- DAILY PLAN -->
+  <section class="panel" id="tab-plan">
+    <div class="bar">
+      <label class="label" for="perDay">Problems per day</label>
+      <select id="perDay" class="ctl"><option>10</option><option selected>12</option><option>15</option></select>
+      <button class="btn" id="prevDay">← Prev</button>
+      <select id="daySel" class="ctl" aria-label="Choose day"></select>
+      <button class="btn" id="nextDay">Next →</button>
+      <button class="btn primary" id="jumpDay">Go to next unfinished day</button>
+    </div>
+    <div class="dayhead">
+      <div>
+        <div class="label" id="dayLabel">Day 1</div>
+        <h2 id="dayTitle">Day 1</h2>
+      </div>
+      <div class="dayinfo">
+        <div><span class="label">Done</span><b id="dDone">0/12</b></div>
+        <div><span class="label">Time budget</span><b id="dBudget">0h</b></div>
+        <div><span class="label">Mix</span><b id="dMix">–</b></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="chip tier t1">T1 ~1800</i> hard, OA ceiling</span>
+      <span><i class="chip tier t2">T2 ~2100</i> harder than the OA</span>
+      <span><i class="chip tier t3">T3 2300+</i> brutal, quant-firm level</span>
+    </div>
+    <div class="list" id="dayList"></div>
+    <p class="note">Each day mixes all three tiers and many topics, the way a real OA throws unrelated problems at you. Time budgets are tighter than a normal OA on purpose: 30 / 45 / 60 minutes for T1 / T2 / T3.</p>
+  </section>
+
+  <!-- ALL -->
+  <section class="panel" id="tab-all" hidden>
+    <div class="bar">
+      <div class="grow"><input id="q" class="ctl" type="search" placeholder="Search a problem name…" aria-label="Search"></div>
+      <select id="fTopic" class="ctl" aria-label="Topic"><option value="">All topics</option></select>
+      <select id="fTier" class="ctl" aria-label="Tier"><option value="">All tiers</option><option value="1">T1 ~1800</option><option value="2">T2 ~2100</option><option value="3">T3 2300+</option></select>
+      <select id="fSrc" class="ctl" aria-label="Platform"><option value="">All platforms</option><option value="LC">LeetCode</option><option value="CF">Codeforces</option><option value="CSES">CSES</option></select>
+      <select id="fCo" class="ctl" aria-label="Company"><option value="">All companies</option></select>
+      <select id="fStat" class="ctl" aria-label="Status"><option value="">Any status</option><option value="todo">To do</option><option value="ac">Solved</option><option value="rev">Revisit</option></select>
+    </div>
+    <p class="muted" id="allCount"></p>
+    <div class="list" id="allList"></div>
+  </section>
+
+  <!-- QUANT -->
+  <section class="panel" id="tab-quant" hidden>
+    <div class="prose">
+      <h2>Quant puzzles you code yourself</h2>
+      <p>Quant firms (Jane Street, Optiver, Citadel, Tower, Quadeye, Graviton, AlphaGrep, IMC, HRT) love probability and expected-value questions, and their tests often want you to compute the answer, not just guess it. For each one: first write an <b>exact</b> solution (DP, Markov chain, or maths), then write a quick <b>Monte Carlo simulation</b> and check that both agree. Where a known answer exists it is given so you can verify.</p>
+    </div>
+    <div class="grid2" id="quantList"></div>
+  </section>
+
+  <!-- COMPANIES -->
+  <section class="panel" id="tab-companies" hidden>
+    <div class="prose">
+      <h2>What each company's test tends to look like</h2>
+      <p>These are typical shapes reported by candidates on interview-experience posts and coding forums. Formats change every year and differ by campus and role, so treat this as a guide to what to drill, not a promise of what you will get.</p>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Company</th><th>Track</th><th>Usual test shape</th><th>Drill these topics</th><th>Tag</th></tr></thead>
+      <tbody id="coTable"></tbody>
+    </table></div>
+    <p class="note">The company tags on each problem show where that problem or its exact pattern is commonly reported (LeetCode company tags, interview posts). Companies do not publish their OA questions, so no list anywhere can be fully verified. Codeforces and CSES problems are tagged <b class="mono">Q</b> when they match the style of quant-firm and Tower-style tests.</p>
+  </section>
+
+  <!-- TRENDS -->
+  <section class="panel" id="tab-trends" hidden>
+    <div class="prose">
+      <h2>What's coming next</h2>
+      <p>Since question banks leak, companies keep moving to problems that combine two ideas, or that need you to see a hidden structure. These are the patterns that have been showing up more and more, and the ones most likely to appear in your test. Each card links straight to practice problems from this sheet.</p>
+    </div>
+    <div class="grid2" id="trendList"></div>
+  </section>
+
+  <!-- HOW TO -->
+  <section class="panel" id="tab-howto" hidden>
+    <div class="prose">
+      <h2>How to use this sheet</h2>
+      <ol>
+        <li><b>Pick your daily count</b> in the Daily plan tab. 12 a day finishes the whole sheet in about a month.</li>
+        <li><b>Press Start on a problem.</b> A timer appears at the bottom with that problem's time budget. If it turns red, you are over time.</li>
+        <li><b>Code it fully and submit it</b> on LeetCode, Codeforces or CSES. Only press <b>Solved</b> when the judge says Accepted. That is the only honest signal.</li>
+        <li><b>Stuck at the time limit?</b> Press <b>Gave up</b>. The problem gets a Revisit tag. Read the editorial, then re-solve it from scratch two or three days later without looking.</li>
+        <li><b>Do it in OA conditions.</b> One sitting, no autocomplete help, no looking up solutions mid-problem. Write your own template code (segment tree, DSU, modpow, Dijkstra) beforehand so you can paste it, like you would in a real test.</li>
+        <li><b>Click a status chip</b> any time to cycle it: To do → Solved → Revisit → To do.</li>
+      </ol>
+      <h3>A good daily rhythm</h3>
+      <ul>
+        <li><b>Block 1 (about 90 min):</b> the T1 problems. Speed run. Aim to beat the clock on every one.</li>
+        <li><b>Block 2 (about 2 hours):</b> the T2 problems, like a mock OA.</li>
+        <li><b>Block 3 (whatever is left):</b> the T3 boss problems. Even partial progress here sharpens you.</li>
+        <li><b>End of day (20 min):</b> re-solve one Revisit problem from an earlier day.</li>
+      </ul>
+      <p class="note">Progress is saved in this browser only. If you clear site data or switch devices, it starts fresh.</p>
+    </div>
+  </section>
+</div>
+
+<div class="timer" id="timer" hidden>
+  <div class="in">
+    <div class="tn" id="tName">–</div>
+    <div class="clock" id="tClock">00:00</div>
+    <div class="muted" id="tTarget" style="color:inherit;opacity:.7"></div>
+    <button class="ok" id="tOk">Solved (AC)</button>
+    <button class="giv" id="tGive">Gave up</button>
+    <button class="x" id="tCancel">Cancel</button>
+  </div>
+</div>
+
+<script>
+/* Format: "#Topic" starts a section. Then: Name|source|tier|company tags
+   source: lc (slug from name) | lc:slug | cf:1009F | cses:1653
+   tags: G Google, M Microsoft, A Amazon, U Uber, AT Atlassian, AD Adobe, FK Flipkart,
+         GS Goldman Sachs, DE D. E. Shaw, Q quant-firm style */
+const RAW = `
+#Sliding Window & Two Pointers
+Minimum Window Substring|lc|1|G A U M FK
+Sliding Window Maximum|lc|1|A G M AT
+Subarrays with K Different Integers|lc|1|A G
+Count Subarrays With Fixed Bounds|lc|1|A
+First Missing Positive|lc|1|A M
+Substring with Concatenation of All Words|lc|1|A
+Minimum Replacements to Sort the Array|lc|1|G
+Minimum Number of Increments on Subarrays to Form a Target Array|lc|1|G
+Shortest Subarray with Sum at Least K|lc|2|G GS
+Minimum Number of K Consecutive Bit Flips|lc|2|G
+Max Value of Equation|lc|2|G
+Constrained Subsequence Sum|lc|2|A
+Trapping Rain Water II|lc|2|G A
+Sliding Window Median|lc|2|G FK
+Count Unique Characters of All Substrings of a Given String|lc|2|G
+Minimum Operations to Make a Subsequence|lc|2|G
+Sum of Imbalance Numbers of All Subarrays|lc|2|
+Sliding Median|cses:1076|1|Q
+Sliding Cost|cses:1077|2|Q
+#Monotonic Stack & Contribution
+Largest Rectangle in Histogram|lc|1|A G M
+Maximal Rectangle|lc|1|G A
+Longest Valid Parentheses|lc|1|A M
+Number of Visible People in a Queue|lc|1|A
+Maximum Score of a Good Subarray|lc|2|G
+Create Maximum Number|lc|2|G
+Odd Even Jump|lc|2|G
+The Skyline Problem|lc|2|G U M
+Sum of Total Strength of Wizards|lc|3|A
+#Binary Search on Answer
+Split Array Largest Sum|lc|1|G A
+Median of Two Sorted Arrays|lc|2|G A M GS
+Find K-th Smallest Pair Distance|lc|2|G
+Kth Smallest Number in Multiplication Table|lc|2|G
+Nth Magical Number|lc|2|G
+Maximum Number of Robots Within Budget|lc|2|
+Preimage Size of Factorial Zeroes Function|lc|2|Q
+Maximum Total Beauty of the Gardens|lc|3|
+Smallest Good Base|lc|3|G Q
+#Heaps & Greedy
+Candy|lc|1|A
+IPO|lc|1|A
+Find Median from Data Stream|lc|1|A G M
+Smallest Range Covering Elements from K Lists|lc|1|G U
+Minimum Number of Taps to Open to Water a Garden|lc|1|A
+Minimum Cost to Make Array Equal|lc|1|
+Minimum Cost to Hire K Workers|lc|2|G
+Maximum Performance of a Team|lc|2|A
+Minimum Number of Refueling Stops|lc|2|G
+Course Schedule III|lc|2|G
+Minimize Deviation in Array|lc|2|
+Patching Array|lc|2|G
+Minimum Time to Complete All Tasks|lc|2|
+Split Message Based on Limit|lc|2|
+Stamping The Sequence|lc|3|G
+#Classic DP
+Wildcard Matching|lc|1|G
+Distinct Subsequences|lc|1|
+Frog Jump|lc|1|A
+Russian Doll Envelopes|lc|1|G
+Best Time to Buy and Sell Stock IV|lc|1|GS
+Dungeon Game|lc|1|M
+Cherry Pickup II|lc|1|G
+Maximum Profit in Job Scheduling|lc|1|A G
+Minimum Difficulty of a Job Schedule|lc|1|A
+Count Vowels Permutation|lc|1|
+Number of Ways to Stay in the Same Place After Some Steps|lc|1|
+Maximum Height by Stacking Cuboids|lc|1|
+Number of Increasing Paths in a Grid|lc|1|
+Longest Increasing Path in a Matrix|lc|1|G
+Paths in Matrix Whose Sum Is Divisible by K|lc|1|
+Minimum Falling Path Sum II|lc|1|
+Regular Expression Matching|lc|2|G A M
+Distinct Subsequences II|lc|2|G
+Scramble String|lc|2|
+Cherry Pickup|lc|2|G
+Profitable Schemes|lc|2|G
+Number of Music Playlists|lc|2|G
+K Inverse Pairs Array|lc|2|DE
+Student Attendance Record II|lc|2|G
+Painting a Grid With Three Different Colors|lc|2|
+Number of Ways to Form a Target String Given a Dictionary|lc|2|
+Minimum Skips to Arrive at Meeting On Time|lc|2|
+Minimum Total Distance Traveled|lc|2|
+Number of Ways to Reorder Array to Get Same BST|lc|2|G
+Maximum Number of Non-overlapping Palindrome Substrings|lc|2|
+Number of Great Partitions|lc|2|
+Beautiful Array|cf:1155D|2|Q
+Counting Towers|cses:2413|2|Q
+Tallest Billboard|lc|3|G
+Super Egg Drop|lc|3|G GS
+Delivering Boxes from Storage to Ports|lc|3|
+Count of Sub-Multisets With Bounded Sum|lc|3|
+Count the Number of Ideal Arrays|lc|3|Q
+Minimum Time to Make Array Sum At Most x|lc|3|
+#Interval DP
+Palindrome Partitioning II|lc|1|A
+Minimum Cost to Cut a Stick|lc|1|
+Minimum Insertion Steps to Make a String Palindrome|lc|1|
+Shortest Common Supersequence|lc|1|
+Burst Balloons|lc|2|G
+Strange Printer|lc|2|
+Maximize Palindrome Length From Subsequences|lc|2|
+Stone Game V|lc|2|
+Remove Boxes|lc|3|G
+Minimum Cost to Merge Stones|lc|3|A
+Count Different Palindromic Subsequences|lc|3|
+#Bitmask DP & SOS
+Maximize Score After N Operations|lc|1|
+Minimum XOR Sum of Two Arrays|lc|1|
+Number of Squareful Arrays|lc|1|
+Shortest Path Visiting All Nodes|lc|2|G
+Smallest Sufficient Team|lc|2|G
+Maximum Students Taking Exam|lc|2|
+Number of Ways to Wear Different Hats to Each Other|lc|2|
+Minimum Cost to Connect Two Groups of Points|lc|2|
+Minimum Incompatibility|lc|2|
+Maximum AND Sum of Array|lc|2|
+Find Minimum Time to Finish All Jobs|lc|2|G
+Distribute Repeating Integers|lc|2|
+The Number of Good Subsets|lc|2|
+Count Subtrees With Max Distance Between Cities|lc|2|
+Number of Possible Sets of Closing Branches|lc|2|
+Elevator Rides|cses:1653|2|Q
+Hamiltonian Flights|cses:1690|2|Q
+Compatible Numbers|cf:165E|2|Q
+Find the Shortest Superstring|lc|3|G
+Parallel Courses II|lc|3|G
+Maximum Number of Groups Getting Fresh Donuts|lc|3|
+Counting Tilings|cses:2181|3|Q
+Jzzhu and Numbers|cf:449D|3|Q
+Vowels|cf:383E|3|Q
+Bits And Pieces|cf:1208F|3|Q
+#Digit DP
+Number of Digit One|lc|1|G
+Numbers At Most N Given Digit Set|lc|1|
+Numbers With Repeated Digits|lc|2|
+Count Special Integers|lc|2|
+Count of Integers|lc|2|
+Count Stepping Numbers in Range|lc|2|
+Counting Numbers|cses:2220|2|Q
+Find All Good Strings|lc|3|
+Segment Sum|cf:1073E|3|Q
+Beautiful numbers|cf:55D|3|Q
+Magic Numbers|cf:628D|3|Q
+#DP Optimisations
+Projects|cses:1140|2|Q
+Longest Increasing Subsequence II|lc|2|
+Maximum Balanced Subsequence Sum|lc|3|
+Pillars|cf:474E|3|Q
+Kalila and Dimna in the Logging Industry|cf:319C|3|Q
+Product Sum|cf:631E|3|Q
+The Fair Nut and Rectangles|cf:1083E|3|Q
+Yet Another Minimization Problem|cf:868F|3|Q
+The Bakery|cf:834D|3|Q
+Partition Game|cf:1527E|3|Q
+#Trees
+Binary Tree Maximum Path Sum|lc|1|G M A
+Serialize and Deserialize Binary Tree|lc|1|A G M U
+Vertical Order Traversal of a Binary Tree|lc|1|A
+Maximum Sum BST in Binary Tree|lc|1|A
+Longest Path With Different Adjacent Characters|lc|1|
+Maximum Number of K-Divisible Components|lc|1|
+Binary Tree Cameras|lc|2|G
+Sum of Distances in Tree|lc|2|G
+Kth Ancestor of a Tree Node|lc|2|G
+Minimum Score After Removals on a Tree|lc|2|
+Number of Good Paths|lc|2|G
+Minimize the Total Price of the Trips|lc|2|
+Count Valid Paths in a Tree|lc|2|
+Tree of Coprimes|lc|2|
+Find the Maximum Sum of Node Values|lc|2|
+Maximum White Subtree|cf:1324F|2|Q
+Tree Painting|cf:1187E|2|Q
+Choosing Capital for Treeland|cf:219D|2|Q
+Tree with Maximum Cost|cf:1092F|2|Q
+Distance in Tree|cf:161D|2|Q
+Fools and Roads|cf:191C|2|Q
+Subtree Queries|cses:1137|2|Q
+Path Queries|cses:1138|2|Q
+Distance Queries|cses:1135|2|Q
+Company Queries II|cses:1688|2|Q
+Tree Distances II|cses:1133|2|Q
+Distinct Colors|cses:1139|2|Q
+Difference Between Maximum and Minimum Price Sum|lc|3|
+Count Paths That Can Form a Palindrome in a Tree|lc|3|
+Minimum Edge Weight Equilibrium Queries in a Tree|lc|3|
+Maximize Value of Function in a Ball Passing Game|lc|3|
+Count Ways to Build Rooms in an Ant Colony|lc|3|
+Lomsat gelral|cf:600E|3|Q
+Dominant Indices|cf:1009F|3|Q
+Xenia and Tree|cf:342E|3|Q
+Ciel the Commander|cf:321C|3|Q
+Path Queries II|cses:2134|3|Q
+Fixed-Length Paths I|cses:2080|3|Q
+Fixed-Length Paths II|cses:2081|3|Q
+#Graphs: Shortest Paths & BFS
+Swim in Rising Water|lc|1|G
+Minimum Obstacle Removal to Reach Corner|lc|1|
+Shortest Path in a Grid with Obstacles Elimination|lc|1|G
+Sliding Puzzle|lc|1|U
+Jump Game IV|lc|1|
+Minimum Number of Days to Eat N Oranges|lc|1|
+Design Graph With Shortest Path Calculator|lc|1|
+Minimum Cost to Make at Least One Valid Path in a Grid|lc|2|G
+Bus Routes|lc|2|G U A
+Word Ladder II|lc|2|A
+Shortest Path to Get All Keys|lc|2|G
+Escape a Large Maze|lc|2|G
+Minimum Weighted Subgraph With the Required Paths|lc|2|
+Second Minimum Time to Reach Destination|lc|2|
+Minimum Cost to Reach Destination in Time|lc|2|
+Maximum Path Quality of a Graph|lc|2|
+Shortest Cycle in a Graph|lc|2|
+Edge Deletion|cf:1076D|2|Q
+Paths and Trees|cf:545E|2|Q
+Flight Discount|cses:1195|2|Q
+Flight Routes|cses:1196|2|Q
+Investigation|cses:1202|2|Q
+Cycle Finding|cses:1197|2|Q
+Minimum Moves to Move a Box to Their Target Location|lc|3|
+Race Car|lc|3|G
+Minimum Number of Visited Cells in a Grid|lc|3|
+Minimum Reverse Operations|lc|3|
+Count the Number of Houses at a Certain Distance II|lc|3|
+Minimum Cost to Convert String II|lc|3|
+Minimum Path|cf:1473E|3|Q
+Legacy|cf:786B|3|Q
+#Graphs: Connectivity, DSU, MST
+Making A Large Island|lc|1|
+Reconstruct Itinerary|lc|1|G U
+Longest Cycle in a Graph|lc|1|
+Parallel Courses III|lc|1|
+Similar String Groups|lc|1|
+Critical Connections in a Network|lc|2|A
+Redundant Connection II|lc|2|G
+Remove Max Number of Edges to Keep Graph Fully Traversable|lc|2|
+Checking Existence of Edge Length Limited Paths|lc|2|G
+Maximum Number of Points From Grid Queries|lc|2|
+Maximum Segment Sum After Removals|lc|2|
+Sort Items by Groups Respecting Dependencies|lc|2|G
+Valid Arrangement of Pairs|lc|2|G
+Cracking the Safe|lc|2|G
+Minimize Malware Spread II|lc|2|
+Largest Component Size by Common Factor|lc|2|G
+Minimum Number of Days to Disconnect Island|lc|2|
+Bertown roads|cf:118E|2|Q
+Checkposts|cf:427C|2|Q
+Planets and Kingdoms|cses:1683|2|Q
+Coin Collector|cses:1686|2|Q
+Mail Delivery|cses:1691|2|Q
+Teleporters Path|cses:1693|2|Q
+Find Critical and Pseudo-Critical Edges in Minimum Spanning Tree|lc|3|
+Bricks Falling When Hit|lc|3|G
+Maximum Employees to Be Invited to a Meeting|lc|3|G
+Minimum spanning tree for each edge|cf:609E|3|Q
+We Need More Bosses|cf:1000E|3|Q
+Giant Pizza|cses:1684|3|Q
+New Flight Routes|cses:1685|3|Q
+Planets Queries II|cses:1160|3|Q
+Download Speed|cses:1694|3|Q
+School Dance|cses:1696|3|Q
+Distinct Routes|cses:1711|3|Q
+#Segment Tree, BIT & Range Queries
+Count of Smaller Numbers After Self|lc|1|G A
+Reverse Pairs|lc|1|G
+My Calendar III|lc|1|G
+Number of Flowers in Full Bloom|lc|1|
+Grid Illumination|lc|1|
+Count of Range Sum|lc|2|G
+Create Sorted Array through Instructions|lc|2|
+Count Good Triplets in an Array|lc|2|
+Falling Squares|lc|2|U
+Range Module|lc|2|G
+Count Integers in Intervals|lc|2|
+Circular RMQ|cf:52C|2|Q
+Sereja and Brackets|cf:380C|2|Q
+Multiset|cf:1354D|2|Q
+Moving Points|cf:1311F|2|Q
+Enemy is weak|cf:61E|2|Q
+Nested Segments|cf:652D|2|Q
+Ant colony|cf:474F|2|Q
+Salary Queries|cses:1144|2|Q
+Subarray Sum Queries|cses:1190|2|Q
+Distinct Values Queries|cses:1734|2|Q
+Forest Queries II|cses:1739|2|Q
+Booking Concert Tickets in Groups|lc|3|
+Handling Sum Queries After Update|lc|3|
+Longest Substring of One Repeating Character|lc|3|
+Rectangle Area II|lc|3|G
+The Child and Sequence|cf:438D|3|Q
+Multidimensional Queries|cf:1093G|3|Q
+Serge and Dining Room|cf:1179C|3|Q
+Powerful array|cf:86D|3|Q
+Range Updates and Sums|cses:1735|3|Q
+Increasing Array Queries|cses:2416|3|Q
+#Strings: Hashing, KMP, Z, Suffix Structures
+Shortest Palindrome|lc|1|G
+Longest Happy Prefix|lc|1|
+Orderly Queue|lc|1|
+Text Justification|lc|1|G U A
+Basic Calculator|lc|1|G A M
+String Matching|cses:1753|1|Q
+Finding Periods|cses:1733|1|Q
+Palindrome Pairs|lc|2|G A
+Sum of Scores of Built Strings|lc|2|
+Minimum Time to Revert Word to Initial State II|lc|2|
+Last Substring in Lexicographical Order|lc|2|
+Find the Closest Palindrome|lc|2|
+Number of Atoms|lc|2|G
+Password|cf:126B|2|Q
+Prefixes and Suffixes|cf:432D|2|Q
+Compress Words|cf:1200E|2|Q
+Good Substrings|cf:271D|2|Q
+Palindrome Degree|cf:7D|2|Q
+Queries for Number of Palindromes|cf:245H|2|Q
+Minimal Rotation|cses:1110|2|Q
+Longest Palindrome|cses:1111|2|Q
+Word Combinations|cses:1731|2|Q
+Longest Duplicate Substring|lc|3|G
+Longest Common Subpath|lc|3|G
+Parse Lisp Expression|lc|3|
+Minimum Cost to Change the Final Value of Expression|lc|3|
+The Number of Subpermutations|cf:1175F|3|Q
+String|cf:123D|3|Q
+Good Substrings (hard)|cf:316G3|3|Q
+Forbidden Indices|cf:873F|3|Q
+Required Substring|cses:1112|3|Q
+Distinct Substrings|cses:2105|3|Q
+Repeating Substring|cses:2106|3|Q
+#Tries & XOR
+Word Search II|lc|1|A G M U
+Concatenated Words|lc|1|A
+Stream of Characters|lc|1|G
+Prefix and Suffix Search|lc|1|G
+Maximum XOR With an Element From Array|lc|2|G Q
+Count Pairs With XOR in a Range|lc|2|Q
+Maximum Strong Pair XOR II|lc|2|
+Maximum Genetic Difference Query|lc|3|
+#Maths, Number Theory & Combinatorics
+Max Points on a Line|lc|1|G A
+Poor Pigs|lc|1|Q
+Common Divisors|cses:1081|1|Q
+Distributing Apples|cses:1716|1|Q
+Creating Strings II|cses:1715|1|Q
+Fibonacci Numbers|cses:1722|1|Q
+Count Anagrams|lc|2|
+Count Ways to Make Array With Product|lc|2|Q
+Self Crossing|lc|2|
+Perfect Rectangle|lc|2|G
+Reaching Points|lc|2|
+Sum of Divisors|cses:1082|2|Q
+Christmas Party|cses:1717|2|Q
+Bracket Sequences I|cses:2064|2|Q
+Counting Necklaces|cses:2209|2|Q
+Throwing Dice|cses:1096|2|Q
+Graph Paths I|cses:1723|2|Q
+Graph Paths II|cses:1724|2|Q
+Erect the Fence|lc|3|G
+Apply Operations to Maximize Score|lc|3|
+Make It One|cf:1043F|3|Q
+Counting Grids|cses:2210|3|Q
+#Probability & Expected Value
+New 21 Game|lc|1|G Q
+Soup Servings|lc|1|G Q
+Knight Probability in Chessboard|lc|1|G GS Q
+Random Pick with Blacklist|lc|1|U
+Frog Position After T Seconds|lc|1|
+Probability of a Two Boxes Having The Same Number of Distinct Balls|lc|2|Q
+Bag of mice|cf:148D|2|Q
+Ilya and Escalator|cf:518D|2|Q
+Bad Luck Island|cf:540D|2|Q
+Little Pony and Expected Maximum|cf:453A|2|Q
+Fish|cf:16E|2|Q
+Dice Probability|cses:1725|2|Q
+Candy Lottery|cses:1727|2|Q
+Inversion Probability|cses:1728|2|Q
+Beautiful Mirrors|cf:1265E|3|Q
+Game on Tree|cf:280C|3|Q
+Puzzles|cf:696B|3|Q
+New Year and Arbitrary Arrangement|cf:908D|3|Q
+Tree Array|cf:1540B|3|Q
+Makoto and a Blackboard|cf:1097D|3|Q
+Moving Robots|cses:1726|3|Q
+#Game Theory
+Stone Game III|lc|1|Q
+Removal Game|cses:1097|1|Q
+Stick Game|cses:1729|1|Q
+Nim Game II|cses:1098|2|Q
+Cat and Mouse|lc|3|G Q
+Grundy's Game|cses:2207|3|Q
+#Design & Implementation
+Maximum Frequency Stack|lc|1|A
+Insert Delete GetRandom O(1) - Duplicates allowed|lc:insert-delete-getrandom-o1-duplicates-allowed|1|
+LFU Cache|lc|2|A G
+All O\`one Data Structure|lc:all-oone-data-structure|2|
+Design Skiplist|lc|2|
+#Backtracking & Meet in the Middle
+N-Queens II|lc|1|
+Sudoku Solver|lc|1|
+Remove Invalid Parentheses|lc|1|
+Word Break II|lc|1|A
+24 Game|lc|1|G
+Integer to English Words|lc|1|A M
+Expression Add Operators|lc|2|G
+Closest Subsequence Sum|lc|2|
+Partition Array Into Two Arrays to Minimize Sum Difference|lc|2|
+Split Array With Same Average|lc|3|G
+#Constructive & Interactive
+Bear and Prime 100|cf:679A|2|Q
+Lost Numbers|cf:1167B|2|Q
+Magic Stones|cf:1110E|2|Q
+Ehab the Xorcist|cf:1325D|2|Q
+Ehab and another another xor problem|cf:1088D|3|Q
+Guess the K-th Zero (Hard version)|cf:1520F2|3|Q
+`;
+
+const CO = {G:"Google",M:"Microsoft",A:"Amazon",U:"Uber",AT:"Atlassian",AD:"Adobe",FK:"Flipkart",GS:"Goldman Sachs",DE:"D. E. Shaw",Q:"Quant-firm style"};
+const MINS = {1:30,2:45,3:60};
+const TIERNAME = {1:"T1 ~1800",2:"T2 ~2100",3:"T3 2300+"};
+
+function slugify(n){return n.toLowerCase().replace(/[^a-z0-9 -]/g,"").trim().replace(/\s+/g,"-").replace(/-+/g,"-");}
+const P = []; const seen = new Set(); let topic = "";
+RAW.split("\n").forEach(line=>{
+  line=line.trim(); if(!line) return;
+  if(line[0]==="#"){topic=line.slice(1); return;}
+  const [name,src,tier,tags]=line.split("|");
+  let url,plat,id;
+  if(src.startsWith("lc")){const s=src.includes(":")?src.split(":")[1]:slugify(name);url=`https://leetcode.com/problems/${s}/`;plat="LC";id="lc:"+s;}
+  else if(src.startsWith("cf:")){const m=src.slice(3).match(/^(\d+)([A-Z]\d?)$/);url=`https://codeforces.com/problemset/problem/${m[1]}/${m[2]}`;plat="CF";id="cf:"+m[1]+m[2];}
+  else {const t=src.slice(5);url=`https://cses.fi/problemset/task/${t}`;plat="CSES";id="cses:"+t;}
+  if(seen.has(id)) return; seen.add(id);
+  const cfLabel = plat==="CF" ? src.slice(3) : plat==="CSES" ? src.slice(5) : "";
+  P.push({id,name,url,plat,cfLabel,topic,tier:+tier,tags:(tags||"").split(/\s+/).filter(Boolean),mins:MINS[tier]});
+});
+const BYID = Object.fromEntries(P.map(p=>[p.id,p]));
+const BYNAME = Object.fromEntries(P.map(p=>[p.name.toLowerCase(),p]));
+
+/* ---------- storage ---------- */
+const KEY="hardset.v1";
+let S={st:{},perDay:12,day:0,tab:"plan",quant:{}};
+try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+function stat(id){return (S.st[id]&&S.st[id].s)||"todo";}
+
+/* ---------- daily plan: proportional mix of tiers, topics round-robin ---------- */
+function rr(list){
+  const groups={}; list.forEach(p=>(groups[p.topic]=groups[p.topic]||[]).push(p));
+  const keys=Object.keys(groups); const out=[]; let i=0;
+  while(out.length<list.length){const g=groups[keys[i%keys.length]]; if(g.length) out.push(g.shift()); i++;}
+  return out;
+}
+function buildPlan(n){
+  const q={1:rr(P.filter(p=>p.tier===1)),2:rr(P.filter(p=>p.tier===2)),3:rr(P.filter(p=>p.tier===3))};
+  const days=[];
+  while(q[1].length+q[2].length+q[3].length){
+    const rem=q[1].length+q[2].length+q[3].length, take=Math.min(n,rem), day=[];
+    const want={}; let given=0;
+    [1,2,3].forEach(t=>{want[t]=Math.floor(take*q[t].length/rem); given+=want[t];});
+    // hand out leftovers to the tiers with the most remaining
+    [1,2,3].sort((a,b)=>q[b].length-want[b]-(q[a].length-want[a])).forEach(t=>{if(given<take&&q[t].length>want[t]){want[t]++;given++;}});
+    while(given<take){for(const t of [3,2,1]){if(given<take&&q[t].length>want[t]){want[t]++;given++;}}}
+    [1,2,3].forEach(t=>{for(let k=0;k<want[t];k++) day.push(q[t].shift());});
+    days.push(day);
+  }
+  return days;
+}
+let PLAN=buildPlan(S.perDay);
+
+/* ---------- rendering ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const STLABEL={todo:"To do",ac:"Solved",rev:"Revisit"};
+function rowHTML(p,i){
+  const s=stat(p.id), rec=S.st[p.id]||{};
+  const time=rec.t?` · <span class="mono">${fmt(rec.t)}</span>${rec.t<=p.mins*60?" ✓":""}`:"";
+  const tags=p.tags.map(t=>`<span class="co" title="${esc(CO[t]||t)}">${t}</span>`).join(" ");
+  return `<div class="row ${s==="ac"?"done":""}" data-id="${p.id}">
+    <div class="idx">${i!=null?i+1:""}</div>
+    <div class="main">
+      <a class="name" href="${p.url}" target="_blank" rel="noopener">${esc(p.name)}</a>
+      <div class="meta">
+        <span class="chip tier t${p.tier}">${TIERNAME[p.tier]}</span>
+        <span class="src">${p.plat}${p.cfLabel?" "+p.cfLabel:""}</span>
+        <span>${esc(p.topic)}</span>
+        <span class="mono">${p.mins}m</span>${time}
+        ${tags}
+      </div>
+    </div>
+    <div class="acts">
+      <button class="go" data-act="start" aria-label="Start timer for ${esc(p.name)}">▶ Start</button>
+      <button class="chip status ${s}" data-act="cycle">${STLABEL[s]}</button>
+    </div>
+  </div>`;
+}
+function fmt(sec){sec=Math.max(0,Math.round(sec));const m=Math.floor(sec/60),s=sec%60;return (m>=60?Math.floor(m/60)+":"+String(m%60).padStart(2,"0"):String(m).padStart(2,"0"))+":"+String(s).padStart(2,"0");}
+
+function renderStats(){
+  const vals=Object.values(S.st), solved=vals.filter(v=>v.s==="ac");
+  $("#sSolved").textContent=`${solved.length}/${P.length}`;
+  $("#sToday").textContent=solved.filter(v=>v.d===today()).length;
+  const days=new Set(solved.map(v=>v.d)); let k=0; const d=new Date();
+  if(!days.has(today())) d.setDate(d.getDate()-1);
+  while(true){const s=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); if(days.has(s)){k++;d.setDate(d.getDate()-1);} else break;}
+  $("#sStreak").textContent=k+"d";
+  const timed=Object.entries(S.st).filter(([id,v])=>v.s==="ac"&&v.t&&BYID[id]);
+  $("#sBeat").textContent=timed.length?Math.round(100*timed.filter(([id,v])=>v.t<=BYID[id].mins*60).length/timed.length)+"%":"–";
+  const tb=$("#tierbar"); tb.innerHTML="";
+  [1,2,3].forEach(t=>{const n=P.filter(p=>p.tier===t&&stat(p.id)==="ac").length;const sp=document.createElement("span");sp.style.width=(100*n/P.length)+"%";sp.style.background=`var(--t${t})`;tb.appendChild(sp);});
+}
+function renderPlan(){
+  if(S.day>=PLAN.length) S.day=PLAN.length-1;
+  const sel=$("#daySel"); sel.innerHTML=PLAN.map((d,i)=>{const done=d.filter(p=>stat(p.id)==="ac").length;return `<option value="${i}">Day ${i+1}${done===d.length?" ✓":done?` (${done}/${d.length})`:""}</option>`;}).join("");
+  sel.value=S.day;
+  const day=PLAN[S.day];
+  $("#dayLabel").textContent=`Day ${S.day+1} of ${PLAN.length} · ${P.length} problems total`;
+  const topics=[...new Set(day.map(p=>p.topic.split(":")[0].split(" &")[0]))];
+  $("#dayTitle").textContent=topics.slice(0,3).join(", ")+(topics.length>3?` + ${topics.length-3} more`:"");
+  const done=day.filter(p=>stat(p.id)==="ac").length;
+  $("#dDone").textContent=`${done}/${day.length}`;
+  const mins=day.reduce((a,p)=>a+p.mins,0);
+  $("#dBudget").textContent=`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
+  const c=[1,2,3].map(t=>day.filter(p=>p.tier===t).length);
+  $("#dMix").textContent=`${c[0]} · ${c[1]} · ${c[2]}`;
+  $("#dayList").innerHTML=day.map((p,i)=>rowHTML(p,i)).join("");
+}
+function renderAll(){
+  const q=$("#q").value.trim().toLowerCase(), t=$("#fTopic").value, tr=$("#fTier").value, sr=$("#fSrc").value, co=$("#fCo").value, st=$("#fStat").value;
+  const list=P.filter(p=>(!q||p.name.toLowerCase().includes(q))&&(!t||p.topic===t)&&(!tr||p.tier==tr)&&(!sr||p.plat===sr)&&(!co||p.tags.includes(co))&&(!st||stat(p.id)===st));
+  $("#allCount").textContent=`${list.length} of ${P.length} problems`;
+  $("#allList").innerHTML=list.length?list.map((p,i)=>rowHTML(p,i)).join(""):`<div class="empty">No problems match these filters. Try clearing one.</div>`;
+}
+function renderAllViews(){renderStats();renderPlan();if(!$("#tab-all").hidden)renderAll();}
+
+/* ---------- filters setup ---------- */
+[...new Set(P.map(p=>p.topic))].forEach(t=>$("#fTopic").insertAdjacentHTML("beforeend",`<option>${esc(t)}</option>`));
+Object.entries(CO).forEach(([k,v])=>$("#fCo").insertAdjacentHTML("beforeend",`<option value="${k}">${esc(v)}</option>`));
+["#q","#fTopic","#fTier","#fSrc","#fCo","#fStat"].forEach(s=>$(s).addEventListener("input",renderAll));
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===name));
+  document.querySelectorAll("section.panel").forEach(s=>s.hidden=s.id!=="tab-"+name);
+  S.tab=name; save(); if(name==="all") renderAll();
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+
+/* ---------- plan controls ---------- */
+$("#perDay").value=String(S.perDay);
+$("#perDay").addEventListener("change",e=>{S.perDay=+e.target.value;PLAN=buildPlan(S.perDay);S.day=0;save();renderPlan();});
+$("#daySel").addEventListener("change",e=>{S.day=+e.target.value;save();renderPlan();});
+$("#prevDay").addEventListener("click",()=>{if(S.day>0){S.day--;save();renderPlan();}});
+$("#nextDay").addEventListener("click",()=>{if(S.day<PLAN.length-1){S.day++;save();renderPlan();}});
+$("#jumpDay").addEventListener("click",()=>{const i=PLAN.findIndex(d=>d.some(p=>stat(p.id)!=="ac"));S.day=i<0?PLAN.length-1:i;save();renderPlan();});
+
+/* ---------- row actions ---------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button[data-act]"); if(!b) return;
+  const id=b.closest(".row").dataset.id;
+  if(b.dataset.act==="cycle"){
+    const next={todo:"ac",ac:"rev",rev:"todo"}[stat(id)];
+    if(next==="todo") delete S.st[id]; else S.st[id]=Object.assign({},S.st[id],{s:next,d:S.st[id]&&S.st[id].d||today()});
+    if(next==="ac") S.st[id].d=today();
+    save(); renderAllViews();
+  } else startTimer(id);
+});
+
+/* ---------- timer ---------- */
+let T=null, tick=null;
+function startTimer(id){
+  T={id,start:Date.now()}; S.timer=T; save(); showTimer();
+}
+function showTimer(){
+  if(!T) {$("#timer").hidden=true; clearInterval(tick); return;}
+  const p=BYID[T.id]; if(!p){T=null;return showTimer();}
+  $("#timer").hidden=false; $("#tName").textContent=p.name; $("#tTarget").textContent=`budget ${p.mins}:00`;
+  clearInterval(tick);
+  const upd=()=>{const el=(Date.now()-T.start)/1000;$("#tClock").textContent=fmt(el);$("#tClock").classList.toggle("over",el>p.mins*60);};
+  upd(); tick=setInterval(upd,1000);
+}
+function endTimer(result){
+  if(!T) return;
+  const secs=(Date.now()-T.start)/1000;
+  if(result){const prev=S.st[T.id]||{};S.st[T.id]={s:result,t:result==="ac"?Math.round(secs):prev.t,d:today(),g:(prev.g||0)+(result==="rev"?1:0)};}
+  T=null; delete S.timer; save(); showTimer(); renderAllViews();
+}
+$("#tOk").addEventListener("click",()=>endTimer("ac"));
+$("#tGive").addEventListener("click",()=>endTimer("rev"));
+$("#tCancel").addEventListener("click",()=>endTimer(null));
+if(S.timer&&BYID[S.timer.id]){T=S.timer;showTimer();}
+
+/* ---------- quant puzzles ---------- */
+const QUANT=[
+ ["Pattern waiting time","Flip a fair coin until a given pattern of H/T appears. Write a function that returns the expected number of flips for ANY pattern (use a KMP automaton plus linear equations, or the Conway leading-number trick).","HH = 6, HT = 4, HTH = 10, HHH = 14. For n heads in a row: 2^(n+1) − 2."],
+ ["Penney's game","Two players each pick a 3-flip pattern. Compute the probability that pattern A shows up before pattern B, for all 64 pairs. Then find, for each A, the best reply B.","For every A there is a B that beats it with probability ≥ 2/3. The game is non-transitive."],
+ ["Reroll dice game","Roll a fair d6. You may stop and take the face value, or reroll, up to k rolls in total. Find the optimal expected payout for k = 1..10 with a backward DP.","k=1: 3.5, k=2: 4.25, k=3: 14/3 ≈ 4.667."],
+ ["Red and black cards","A shuffled deck has R red and B black cards. You flip one at a time; red pays +1, black costs −1. You can stop whenever you like. Compute the optimal expected value with DP over (r, b).","For a standard 26/26 deck the value is about 2.62."],
+ ["Gambler's ruin","Start with k, win +1 with probability p, lose −1 otherwise. Stop at 0 or N. Compute the probability of reaching N and the expected number of steps, for any p.","For p = 1/2: P(reach N) = k/N and the expected duration is k(N − k)."],
+ ["Unequal coupon collector","There are n coupon types with probabilities p_i (n ≤ 20). Compute the expected draws to collect all of them, using inclusion–exclusion over subsets or a bitmask DP.","For n equal types the answer is n·H_n. For a d6 that is 14.7."],
+ ["Expected maximum","Roll an m-faced die n times. Compute the expected maximum exactly, and also its variance.","E[max] = m − Σ_{k=1}^{m−1} (k/m)^n. Same idea as CF 453A."],
+ ["Broken stick","Break a unit stick at k − 1 uniform random points. Find the probability the k pieces can form a polygon, both by simulation and by formula.","3 pieces form a triangle with probability 1/4. In general 1 − k / 2^(k−1)."],
+ ["Optimal stopping (secretary)","n candidates come in random order. You see only relative ranks and must accept or reject each one on the spot. Compute, with exact DP, the best cutoff r and the win probability for n up to 1000.","Cutoff tends to n/e and the win probability tends to 1/e ≈ 0.368."],
+ ["Longest run of heads","Flip a fair coin n times. Compute the full distribution of the longest run of heads with DP, then the expected value for n = 100.","For n = 100 the expected longest run is about 5.99."],
+ ["Random permutation stats","For a random permutation of size n, compute the expected number of fixed points, of cycles, and of left-to-right records. Verify each one by simulation.","Fixed points: 1. Cycles: H_n. Records: H_n."],
+ ["Knight's return","A knight does a random walk on an 8×8 board, picking a legal move uniformly each step. Find the expected number of moves to come back to the starting corner.","168. Use the stationary distribution of a random walk on a graph: total degree ÷ degree of corner = 336 ÷ 2."],
+ ["Drunk on a line","A walker starts at 0 and steps ±1 with equal chance. Find the expected time to first reach +a or −b. Then solve the 2D version on a grid by solving a linear system numerically.","The 1D answer is a·b."],
+ ["Airplane seating","n passengers board in order. The first sits in a random seat, and everyone after takes their own seat if free, otherwise a random free one. Simulate, then prove the chance the last passenger gets their own seat.","1/2, for every n ≥ 2."],
+ ["Sum reaching N","Keep rolling a d6 and adding to a running total. Compute the probability that the running total ever equals exactly N, for N up to 10^6, and see what it tends to.","Tends to 1 ÷ (expected roll) = 2/7."],
+ ["Non-transitive dice","Given several custom dice, compute P(die i beats die j) for every pair. Then search for a set of 3 six-faced dice with faces 0..9 where A beats B, B beats C and C beats A, each with probability above 1/2.","Efron's dice are a famous example of this."],
+ ["Monty Hall, generalised","n doors, 1 prize. You pick one door, the host opens k empty doors, and you may switch to one of the remaining closed doors. Compute the win probability of switching and confirm by simulation.","Switching wins with probability (n − 1) / (n(n − k − 1))."],
+ ["Order book matching engine","Build a limit order book: add, cancel and modify orders, with price-time priority. Print trades as they happen. Support at least 10^5 operations per second. This is a classic Optiver / IMC style task.","Check: total volume traded never exceeds the smaller of resting and incoming volume, and the book is never crossed."],
+ ["Rolling statistics stream","Process a stream of prices. After each one, output the rolling mean, the variance and the median of the last w values, plus the VWAP. Mean and variance must be O(1) per update, median O(log w).","Compare against a slow O(w) version on random tests."],
+ ["Reservoir sampling","Sample k items uniformly from a stream of unknown length. Then do the weighted version (A-Res). Prove by simulation that each item's inclusion probability is right.","Each item should be picked with probability k/n."],
+ ["Estimate π and e","Estimate π by throwing random points, and e by counting how many U(0,1) numbers you need before the sum passes 1. Show that the error shrinks like 1/√n.","The expected count in the e experiment is exactly e."],
+ ["Bet sizing (Kelly)","A bet pays b to 1 and wins with probability p. Simulate wealth over 1000 bets for different fractions f of wealth bet each time. Find the f that maximises the median final wealth.","The Kelly fraction is f* = p − (1 − p)/b."],
+ ["Ants on a stick","n ants are on a stick of length L, each walking left or right at speed 1. When two meet they both turn around. Find the time the last ant falls off, and which ant is the last.","Treat collisions as ants passing through each other. The order of ants never changes."],
+ ["Two-player dice duel","Player A rolls a d6 and B rolls a d8. If they tie they reroll. Find the probability A wins. Then generalise to dice with n and m faces in O(1).","Use P(A wins | no tie) = P(A > B) ÷ (1 − P(tie))."],
+ ["Matrix power Markov chain","Given a Markov chain with up to 100 states, compute the distribution after T = 10^18 steps with fast matrix power, and the expected time to absorption by solving a linear system.","Cross-check the absorption time against simulation."]
+];
+$("#quantList").innerHTML=QUANT.map((q,i)=>`<label class="card qcard ${S.quant[i]?"done":""}" data-q="${i}">
+  <input type="checkbox" id="qz${i}" ${S.quant[i]?"checked":""}>
+  <div style="display:grid;gap:6px;min-width:0"><h3>${esc(q[0])}</h3><p>${esc(q[1])}</p><p class="ans"><b>Check:</b> ${esc(q[2])}</p></div>
+</label>`).join("");
+$("#quantList").addEventListener("change",e=>{const c=e.target.closest(".qcard");const i=c.dataset.q;S.quant[i]=e.target.checked;c.classList.toggle("done",e.target.checked);save();});
+
+/* ---------- companies ---------- */
+const COMP=[
+ ["Google","SDE","Usually 2 problems in about 60–90 minutes. Full marks need all hidden tests to pass, so edge cases and complexity matter.","Trees, graphs, DP, strings, binary search on answer","G"],
+ ["Microsoft","SDE","2–3 problems on Codility or HackerRank, 60–90 minutes. Mostly medium-hard with tricky edge cases.","Arrays, greedy, DP, strings, simulation","M"],
+ ["Amazon","SDE","2 coding problems on HackerRank plus a work-style survey, about 90 minutes.","Heaps, greedy, sliding window, BFS, prefix sums","A"],
+ ["Uber","SDE","3–4 problems that ramp up fast, often the last one is a real hard. 60–90 minutes.","DP, graphs, simulation, intervals","U"],
+ ["Atlassian / Adobe / Flipkart","SDE","2–4 problems, medium to hard, about 90 minutes. Some add a design or debugging round.","Data structure design, DP, graphs, greedy","AT AD FK"],
+ ["Goldman Sachs","SDE / Strats","HackerRank: coding plus maths, aptitude and CS MCQs. Strats roles add probability.","DP, maths, probability, arrays","GS"],
+ ["D. E. Shaw","SDE / Quant dev","HackerRank: 2–3 coding problems plus MCQs on CS fundamentals and aptitude.","DP, greedy, bit tricks, combinatorics","DE"],
+ ["Tower Research","Quant dev","2–3 hard problems in Codeforces style, 60–90 minutes. Very tight on complexity.","DP optimisations, segment trees, maths, graphs","Q"],
+ ["Quadeye / Graviton / AlphaGrep","Quant dev / research","Codeforces-style coding plus probability, maths and puzzle MCQs.","Probability DP, bitmask, number theory, game theory","Q"],
+ ["Optiver / IMC","Trader / SWE","Mental maths and number-sequence speed tests, then coding that is often implementation-heavy.","Fast arithmetic, order books, simulation, EV","Q"],
+ ["Jane Street","Trader / SWE","Fewer online tests, more interviews. Heavy on probability, betting games and clear reasoning while coding.","Expected value, games, clean code under questioning","Q"],
+ ["Citadel / Citadel Securities","SWE / Quant","HackerRank, 2–3 hard problems, 60–90 minutes.","DP, graphs, maths, data structures","Q"],
+ ["HRT / Jump / Two Sigma","SWE / Algo dev","Hard algorithm problems plus systems and probability questions.","Data structures, probability, low-level thinking","Q"]
+];
+$("#coTable").innerHTML=COMP.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td><td class="mono">${esc(r[4])}</td></tr>`).join("");
+
+/* ---------- trends ---------- */
+const TRENDS=[
+ ["Binary search on the answer + a greedy or DS check","Instead of finding the answer directly, you guess it and check if it works. Companies like this because it needs two ideas joined together.",["Split Array Largest Sum","Find K-th Smallest Pair Distance","Maximum Number of Robots Within Budget","Maximum Total Beauty of the Gardens","Longest Common Subpath"]],
+ ["Contribution technique","Asked to sum something over all subarrays? Count how much each element contributes instead. Usually paired with a monotonic stack.",["Sum of Total Strength of Wizards","Count Unique Characters of All Substrings of a Given String","Sum of Imbalance Numbers of All Subarrays","Maximum Score of a Good Subarray"]],
+ ["Rerooting DP on trees","Compute an answer for every node as the root in O(n) total. Very common in recent hard OAs.",["Sum of Distances in Tree","Maximum White Subtree","Tree Painting","Tree with Maximum Cost","Difference Between Maximum and Minimum Price Sum"]],
+ ["Dijkstra on expanded states","The graph node becomes (node, extra state): coupons used, keys held, time left. Looks simple, punishes wrong state design.",["Shortest Path to Get All Keys","Minimum Cost to Reach Destination in Time","Flight Discount","Minimum Path","Second Minimum Time to Reach Destination"]],
+ ["Offline queries with sorting + DSU","Sort queries and edges together, then answer them with a union-find as you go. Turns impossible-looking problems into easy ones.",["Checking Existence of Edge Length Limited Paths","Maximum Number of Points From Grid Queries","Number of Good Paths","Maximum Segment Sum After Removals"]],
+ ["Bitmask and SOS DP","Small n (≤ 20) means bitmask. Superset/subset sums are a favourite in quant-firm tests.",["Parallel Courses II","Find Minimum Time to Finish All Jobs","Compatible Numbers","Jzzhu and Numbers","Bits And Pieces"]],
+ ["Digit DP with a twist","Counting numbers in a range with an extra condition, sometimes with a string automaton on top.",["Count of Integers","Count Stepping Numbers in Range","Find All Good Strings","Segment Sum"]],
+ ["Expected value and probability DP","The core of quant tests. Linearity of expectation solves many that look impossible.",["Game on Tree","Tree Array","Beautiful Mirrors","Bag of mice","New 21 Game"]],
+ ["String hashing + binary search","Fast to code in an OA and powers many hard string problems.",["Longest Duplicate Substring","Longest Common Subpath","The Number of Subpermutations","Minimum Time to Revert Word to Initial State II"]],
+ ["Lazy segment trees and range tricks","Range updates plus range queries. Shows up in Tower, Citadel and Google-level tests.",["Booking Concert Tickets in Groups","Handling Sum Queries After Update","The Child and Sequence","Range Updates and Sums"]],
+ ["Binary lifting and LCA","Jump 2^k steps at once. Used for k-th ancestor, path queries and functional graphs.",["Kth Ancestor of a Tree Node","Maximize Value of Function in a Ball Passing Game","Minimum Edge Weight Equilibrium Queries in a Tree","Planets Queries II"]],
+ ["Constructive and interactive","Build an answer that satisfies rules, or ask the judge questions. Growing in Google and quant tests because it is hard to copy.",["Guess the K-th Zero (Hard version)","Lost Numbers","Ehab the Xorcist","Magic Stones"]],
+ ["Multi-level implementation tasks","Some companies now use one long task in stages (like CodeSignal's level-based format) where each level adds features to your code. Clean code and speed win.",["LFU Cache","All O`one Data Structure","Design Skiplist","Text Justification","Number of Atoms"]]
+];
+$("#trendList").innerHTML=TRENDS.map(t=>`<div class="card"><h3>${esc(t[0])}</h3><p class="muted">${esc(t[1])}</p><ul>${t[2].map(n=>{const p=BYNAME[n.toLowerCase()];return p?`<li><a href="${p.url}" target="_blank" rel="noopener">${esc(p.name)}</a> <span class="chip tier t${p.tier}">T${p.tier}</span></li>`:`<li>${esc(n)}</li>`;}).join("")}</ul></div>`).join("");
+
+/* ---------- boot ---------- */
+renderAllViews();
+showTab(S.tab||"plan");
+</script>
