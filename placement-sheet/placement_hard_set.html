@@ -166,6 +166,7 @@ td:first-child{font-weight:700;white-space:nowrap}
         <div class="stat"><span class="label">Beat clock</span><b id="sBeat">–</b></div>
       </div>
       <div class="tierbar" id="tierbar" aria-hidden="true"></div>
+      <p class="muted storenote" id="syncNote" style="margin-top:8px">Connecting to your account…</p>
     </div>
   </header>
 
@@ -298,7 +299,7 @@ td:first-child{font-weight:700;white-space:nowrap}
         <li><b>Block 3 (whatever is left):</b> the T3 boss problems. Even partial progress here sharpens you.</li>
         <li><b>End of day (20 min):</b> re-solve one Revisit problem from an earlier day.</li>
       </ul>
-      <p class="note">Progress is saved in this browser only. If you clear site data or switch devices, it starts fresh.</p>
+      <p class="note">When you open this page signed in to claude.ai, your ticks, notes and code are saved to your account in a private space only you can see, so they follow you to any device. If the account can't be reached, the page saves in this browser instead and the line under the stats at the top says so.</p>
     </div>
   </section>
 </div>
@@ -809,7 +810,58 @@ const PLISTS=PRACTICE.map(l=>({title:l.title,note:l.note,items:l.items.map(([nam
 const KEY="hardset.v1";
 let S={st:{},perDay:12,day:0,tab:"plan",quant:{}};
 try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function save(){saveLocal();scheduleProgress();}
+
+/* ---------- ticks synced to the viewer's account ---------- */
+// One document, data/users/<id>/progress, holds every tick (problems + quant puzzles).
+// The browser copy stays as a fast cache and as the fallback when the account isn't reachable.
+var progressRef=null, lastSynced=null, progT=null, progChain=Promise.resolve(), progFailed=false;
+function progBody(){return {st:S.st||{},quant:S.quant||{}};}
+function scheduleProgress(){
+  if(!progressRef) return;
+  if(JSON.stringify(progBody())===lastSynced) return;     // nothing changed (e.g. only a tab switch)
+  clearTimeout(progT);
+  progT=setTimeout(()=>{
+    progT=null;
+    const body=JSON.parse(JSON.stringify(progBody())), j=JSON.stringify(body);
+    if(j===lastSynced) return;
+    lastSynced=j;
+    progChain=progChain.then(()=>progressRef.set(Object.assign(body,{updatedAt:new Date().toISOString()})))
+      .then(()=>{ if(progFailed){progFailed=false;updateSyncNote();} })
+      .catch(()=>{ lastSynced=null; progFailed=true; updateSyncNote(); });
+  },600);                                                  // a burst of ticks becomes one write
+}
+function startProgressSync(db,uid){
+  try{ progressRef=db.doc("data/users/"+uid+"/progress"); }catch(e){ progressRef=null; return; }
+  const MIGKEY="hardset.migrated";
+  let first=true;
+  progressRef.onSnapshot(snap=>{
+    const d=snap.exists?snap.data():null;
+    const cloud={st:Object.assign({},(d&&d.st)||{}),quant:Object.assign({},(d&&d.quant)||{})};
+    if(first){
+      first=false;
+      let done=false; try{done=localStorage.getItem(MIGKEY)===uid;}catch(e){}
+      if(!done){                                           // first visit from this browser: keep its ticks
+        cloud.st=Object.assign({},S.st,cloud.st);
+        cloud.quant=Object.assign({},S.quant,cloud.quant);
+        try{localStorage.setItem(MIGKEY,uid);}catch(e){}
+      }
+    } else if(progT){ return; }                            // a local change is about to be written; keep it
+    lastSynced=JSON.stringify({st:(d&&d.st)||{},quant:(d&&d.quant)||{}});
+    S.st=cloud.st; S.quant=cloud.quant;
+    saveLocal(); renderAllViews(); renderQuant();
+    scheduleProgress();                                    // uploads anything merged in from this browser
+  },()=>{ progressRef=null; updateSyncNote(); });
+}
+function updateSyncNote(){
+  const el=document.getElementById("syncNote"); if(!el) return;
+  el.textContent=progFailed?"Couldn't save your latest ticks to your account. They're kept in this browser and will retry on your next tick."
+    :progressRef?"Ticks, notes and code are saved to your claude.ai account."
+    :notesMode==="connecting"?"Connecting to your account…"
+    :"Saved in this browser only. Open the page signed in to claude.ai to keep progress in your account.";
+  el.classList.toggle("status-err",progFailed);
+}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
 function stat(id){return (S.st[id]&&S.st[id].s)||"todo";}
 
@@ -928,6 +980,7 @@ function storeLabel(){
 }
 function notesReady(){
   $("#nbStore").textContent=storeLabel();
+  updateSyncNote();
   if(!$("#nm").hidden&&!dirty) $("#nmStatus").textContent=storeLabel();
   renderAllViews();
 }
@@ -938,9 +991,10 @@ function notesReady(){
   if(db&&uid){ try{ notesCol=db.collection("data/users/"+uid); }catch(e){ notesCol=null; } }
   if(!notesCol){ notesMode="local"; loadLocalNotes(); notesReady(); return; }
   notesMode="cloud";
+  startProgressSync(db,uid);
   notesCol.onSnapshot(snap=>{
     for(const k in NOTES) delete NOTES[k];
-    snap.docs.forEach(d=>{ if(d.exists) NOTES[d.id]=Object.assign({},d.data()); });
+    snap.docs.forEach(d=>{ if(d.exists&&d.id!=="progress") NOTES[d.id]=Object.assign({},d.data()); });
     notesReady();
   },()=>{ notesMode="local"; notesCol=null; loadLocalNotes(); notesReady(); });
 })();
@@ -1146,10 +1200,11 @@ const QUANT=[
  ["Two-player dice duel","Player A rolls a d6 and B rolls a d8. If they tie they reroll. Find the probability A wins. Then generalise to dice with n and m faces in O(1).","Use P(A wins | no tie) = P(A > B) ÷ (1 − P(tie))."],
  ["Matrix power Markov chain","Given a Markov chain with up to 100 states, compute the distribution after T = 10^18 steps with fast matrix power, and the expected time to absorption by solving a linear system.","Cross-check the absorption time against simulation."]
 ];
-$("#quantList").innerHTML=QUANT.map((q,i)=>`<label class="card qcard ${S.quant[i]?"done":""}" data-q="${i}">
+function renderQuant(){ $("#quantList").innerHTML=QUANT.map((q,i)=>`<label class="card qcard ${S.quant[i]?"done":""}" data-q="${i}">
   <input type="checkbox" id="qz${i}" ${S.quant[i]?"checked":""}>
   <div style="display:grid;gap:6px;min-width:0"><h3>${esc(q[0])}</h3><p>${esc(q[1])}</p><p class="ans"><b>Check:</b> ${esc(q[2])}</p></div>
-</label>`).join("");
+</label>`).join(""); }
+renderQuant();
 $("#quantList").addEventListener("change",e=>{const c=e.target.closest(".qcard");const i=c.dataset.q;S.quant[i]=e.target.checked;c.classList.toggle("done",e.target.checked);save();});
 
 /* ---------- companies ---------- */
