@@ -8,7 +8,7 @@
   --bg:#F2F4F7; --surface:#FFFFFF; --sunk:#E8ECF2; --ink:#121823; --muted:#5A6476; --line:#D8DEE7;
   --accent:#1D4ED8; --accent-ink:#FFFFFF;
   --t1:#1F5FD1; --t2:#9A1FCB; --t3:#D9480F;
-  --ac:#13804A; --ac-bg:#DDF3E6; --rev:#B45309; --rev-bg:#FBEBD3; --over:#C2252A;
+  --scrim:rgba(18,24,35,.55); --ac:#13804A; --ac-bg:#DDF3E6; --rev:#B45309; --rev-bg:#FBEBD3; --over:#C2252A;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body:"Public Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -18,12 +18,12 @@
   --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E7EBF1; --muted:#97A2B4; --line:#273244;
   --accent:#7EA2FF; --accent-ink:#0D1219;
   --t1:#6E9DFF; --t2:#D07CFF; --t3:#FF8A4C;
-  --ac:#4ADE8F; --ac-bg:#123A26; --rev:#F5B256; --rev-bg:#3A2A12; --over:#FF6B6F; color-scheme:dark}}
+  --scrim:rgba(0,0,0,.65); --ac:#4ADE8F; --ac-bg:#123A26; --rev:#F5B256; --rev-bg:#3A2A12; --over:#FF6B6F; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E7EBF1; --muted:#97A2B4; --line:#273244;
   --accent:#7EA2FF; --accent-ink:#0D1219;
   --t1:#6E9DFF; --t2:#D07CFF; --t3:#FF8A4C;
-  --ac:#4ADE8F; --ac-bg:#123A26; --rev:#F5B256; --rev-bg:#3A2A12; --over:#FF6B6F; color-scheme:dark}
+  --scrim:rgba(0,0,0,.65); --ac:#4ADE8F; --ac-bg:#123A26; --rev:#F5B256; --rev-bg:#3A2A12; --over:#FF6B6F; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
@@ -72,6 +72,23 @@ input.ctl{width:100%}
 .row .idx{font-family:var(--f-mono);color:var(--muted);font-size:12px;text-align:right}
 .row .cb{width:20px;height:20px;margin:0;accent-color:var(--ac);cursor:pointer;justify-self:center}
 .lvl{border-color:currentColor}.lvl.easy{color:var(--ac)}.lvl.medium{color:var(--rev)}.lvl.hard{color:var(--over)}
+.go.note.has{background:var(--ac-bg);color:var(--ac);border-color:transparent}
+.row .acts{flex-wrap:wrap;justify-content:flex-end}
+.modal{position:fixed;inset:0;z-index:30;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px 24px;overflow:auto}
+.modal[hidden],[hidden]{display:none!important}
+.sheet{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:18px;display:grid;gap:10px}
+.sheethead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheethead h2{font-size:21px}
+.fieldhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px}
+.sheet textarea{width:100%;resize:vertical;line-height:1.5;background:var(--bg)}
+.sheet textarea.code{font-family:var(--f-mono);font-size:13px;tab-size:4;white-space:pre;overflow:auto;min-height:260px}
+.sheetfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.btn.small{padding:4px 9px;font-size:12.5px}
+.status-err{color:var(--over)}
+.nbcard .nbnotes{white-space:pre-wrap;line-height:1.55}
+.nbcard details summary{cursor:pointer;font-weight:600;font-size:14px}
+.nbcode{margin:8px 0 0;background:var(--sunk);border-radius:8px;padding:12px;overflow-x:auto;font-family:var(--f-mono);font-size:12.5px;line-height:1.5;tab-size:4}
+.storenote{font-size:13px}
 .plist-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
 .row .main{min-width:0}
 .row .name{font-weight:600;text-decoration:none;color:var(--ink)}
@@ -156,6 +173,7 @@ td:first-child{font-weight:700;white-space:nowrap}
     <button role="tab" data-tab="plan" aria-selected="true">Daily plan</button>
     <button role="tab" data-tab="all" aria-selected="false">All problems</button>
     <button role="tab" data-tab="practice" aria-selected="false">Practice lists</button>
+    <button role="tab" data-tab="notebook" aria-selected="false">My notebook</button>
     <button role="tab" data-tab="quant" aria-selected="false">Quant puzzles</button>
     <button role="tab" data-tab="companies" aria-selected="false">Company patterns</button>
     <button role="tab" data-tab="trends" aria-selected="false">What's coming next</button>
@@ -215,6 +233,19 @@ td:first-child{font-weight:700;white-space:nowrap}
     <div id="practiceLists" class="panel"></div>
   </section>
 
+  <!-- NOTEBOOK -->
+  <section class="panel" id="tab-notebook" hidden>
+    <div class="prose">
+      <h2>My notebook</h2>
+      <p>Every problem you've written notes or code for, newest first. Use it to revise: read your notes, then try to rewrite the code without looking.</p>
+    </div>
+    <div class="bar">
+      <div class="grow"><input id="nbq" class="ctl" type="search" placeholder="Search your notes and code…" aria-label="Search notebook"></div>
+      <span class="muted storenote" id="nbStore">Connecting…</span>
+    </div>
+    <div id="nbList" class="panel"></div>
+  </section>
+
   <!-- QUANT -->
   <section class="panel" id="tab-quant" hidden>
     <div class="prose">
@@ -257,6 +288,7 @@ td:first-child{font-weight:700;white-space:nowrap}
         <li><b>Stuck at the time limit?</b> Press <b>Gave up</b>. The problem gets a Revisit tag. Read the editorial, then re-solve it from scratch two or three days later without looking.</li>
         <li><b>Do it in OA conditions.</b> One sitting, no autocomplete help, no looking up solutions mid-problem. Write your own template code (segment tree, DSU, modpow, Dijkstra) beforehand so you can paste it, like you would in a real test.</li>
         <li><b>Tick the box</b> next to a problem once it's accepted on the judge, however you solved it. Untick it to undo.</li>
+        <li><b>Press Notes or Code</b> on any problem to write your notes (pattern, key idea, mistakes) and paste your final accepted code. It saves on its own as you type. Everything you write shows up in the <b>My notebook</b> tab for revision.</li>
         <li><b>Click a status chip</b> any time to cycle it: To do → Solved → Revisit → To do. Use Revisit for problems you want to re-solve later.</li>
       </ol>
       <h3>A good daily rhythm</h3>
@@ -269,6 +301,27 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p class="note">Progress is saved in this browser only. If you clear site data or switch devices, it starts fresh.</p>
     </div>
   </section>
+</div>
+
+<div class="modal" id="nm" hidden role="dialog" aria-modal="true" aria-labelledby="nmTitle">
+  <div class="sheet">
+    <div class="sheethead">
+      <div style="min-width:0">
+        <div class="label" id="nmMeta"></div>
+        <h2 id="nmTitle">Problem</h2>
+        <a id="nmLink" href="#" target="_blank" rel="noopener">Open the problem ↗</a>
+      </div>
+      <button class="btn" id="nmClose">Close</button>
+    </div>
+    <div class="fieldhead"><label class="label" for="nmNotes">My notes</label><button class="btn small" id="nmTpl">Use template</button></div>
+    <textarea id="nmNotes" class="ctl" rows="7" placeholder="Pattern: which trick does this use?&#10;Key idea: the one sentence that unlocks it&#10;Mistakes I made: bugs, edge cases I missed&#10;Time / space: O(?)"></textarea>
+    <div class="fieldhead"><label class="label" for="nmCode">Final working code</label><button class="btn small" id="nmCopy">Copy code</button></div>
+    <textarea id="nmCode" class="ctl code" rows="16" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="// Paste your accepted solution here.&#10;// Tab inserts 4 spaces."></textarea>
+    <div class="sheetfoot">
+      <span class="muted storenote" id="nmStatus"></span>
+      <button class="btn primary" id="nmSave">Save</button>
+    </div>
+  </div>
 </div>
 
 <div class="timer" id="timer" hidden>
@@ -805,6 +858,8 @@ function rowHTML(p,i,pre){
       </div>
     </div>
     <div class="acts">
+      <button class="go note ${hasNote(p.id,"notes")?"has":""}" data-act="notes" aria-label="Notes for ${esc(p.name)}">Notes</button>
+      <button class="go note ${hasNote(p.id,"code")?"has":""}" data-act="code" aria-label="Final code for ${esc(p.name)}">Code</button>
       <button class="go" data-act="start" aria-label="Start timer for ${esc(p.name)}">▶ Start</button>
       <button class="chip status ${s}" data-act="cycle">${STLABEL[s]}</button>
     </div>
@@ -855,7 +910,145 @@ function renderPractice(){
       <div class="list">${l.items.map((p,i)=>rowHTML(p,i,"p")).join("")}</div></div>`;
   }).join("");
 }
-function renderAllViews(){renderStats();renderPlan();renderPractice();if(!$("#tab-all").hidden)renderAll();}
+function renderAllViews(){renderStats();renderPlan();renderPractice();renderNotebook();if(!$("#tab-all").hidden)renderAll();}
+
+/* ---------- notes & final code ---------- */
+// Saved in the page's database, in a private space only this viewer can read.
+// Falls back to this browser's storage when the database isn't available.
+const NOTES={};                 // problem id -> {notes, code, name, url, updatedAt}
+const LNKEY="hardset.notes.v1";
+let notesMode="connecting", notesCol=null, saveChain=Promise.resolve();
+function hasNote(id,f){const n=NOTES[id];return !!(n&&n[f]&&String(n[f]).trim());}
+function loadLocalNotes(){try{Object.assign(NOTES,JSON.parse(localStorage.getItem(LNKEY)||"{}"));}catch(e){}}
+function saveLocalNotes(){try{localStorage.setItem(LNKEY,JSON.stringify(NOTES));return true;}catch(e){return false;}}
+function storeLabel(){
+  return notesMode==="cloud"?"Notes are saved to your claude.ai account (private to you)."
+    :notesMode==="local"?"Notes are saved in this browser only. Open the page signed in to claude.ai to keep them in your account."
+    :"Connecting…";
+}
+function notesReady(){
+  $("#nbStore").textContent=storeLabel();
+  if(!$("#nm").hidden&&!dirty) $("#nmStatus").textContent=storeLabel();
+  renderAllViews();
+}
+(async()=>{
+  let db=null,user=null,uid=null;
+  try{ if(window.claude&&claude.use){ [db,user]=await Promise.all([claude.use("db"),claude.use("user")]); } }catch(e){}
+  try{ uid=user?await user.id():null; }catch(e){}
+  if(db&&uid){ try{ notesCol=db.collection("data/users/"+uid); }catch(e){ notesCol=null; } }
+  if(!notesCol){ notesMode="local"; loadLocalNotes(); notesReady(); return; }
+  notesMode="cloud";
+  notesCol.onSnapshot(snap=>{
+    for(const k in NOTES) delete NOTES[k];
+    snap.docs.forEach(d=>{ if(d.exists) NOTES[d.id]=Object.assign({},d.data()); });
+    notesReady();
+  },()=>{ notesMode="local"; notesCol=null; loadLocalNotes(); notesReady(); });
+})();
+
+function persistNote(id,body){
+  const empty=!body.notes.trim()&&!body.code.trim();
+  if(empty) delete NOTES[id]; else NOTES[id]=body;
+  if(notesMode==="cloud"&&notesCol){
+    const ref=notesCol.doc(id);
+    saveChain=saveChain.then(()=>empty?ref.delete():ref.set(body)).then(()=>{
+      if(currentId===id&&!dirty) setNoteStatus("Saved to your account.");
+    }).catch(e=>{
+      setNoteStatus(e&&e.code==="quota_exceeded"
+        ?"Not saved: your notebook storage is full. Delete some old notes and try again."
+        :"Not saved. Copy your text somewhere safe, then press Save again.",true);
+    });
+  } else {
+    setNoteStatus(saveLocalNotes()?"Saved in this browser.":"Not saved: this browser blocks storage here. Copy your text somewhere safe.",!saveLocalNotes());
+  }
+  renderAllViews();
+}
+
+let currentId=null, dirty=false, autoT=null;
+function setNoteStatus(t,err){const el=$("#nmStatus");el.textContent=t;el.classList.toggle("status-err",!!err);}
+function openNotes(id,focus){
+  if(notesMode==="connecting"){ /* still allow editing; saving waits for storage below */ }
+  const p=BYID[id], n=NOTES[id]||{};
+  currentId=id; dirty=false;
+  $("#nmTitle").textContent=p?p.name:(n.name||id);
+  $("#nmMeta").textContent=p?[p.plat,p.lvl||TIERNAME[p.tier],p.topic].filter(Boolean).join(" · "):"";
+  $("#nmLink").href=p?p.url:(n.url||"#");
+  $("#nmNotes").value=n.notes||"";
+  $("#nmCode").value=n.code||"";
+  setNoteStatus(n.updatedAt?"Last saved "+new Date(n.updatedAt).toLocaleString()+".":storeLabel());
+  $("#nm").hidden=false;
+  document.body.style.overflow="hidden";
+  (focus==="code"?$("#nmCode"):$("#nmNotes")).focus();
+}
+function saveCurrent(){
+  if(!currentId) return;
+  clearTimeout(autoT);
+  if(notesMode==="connecting"){ setNoteStatus("Still connecting to your account… saving in a moment."); autoT=setTimeout(saveCurrent,800); return; }
+  const p=BYID[currentId];
+  const body={notes:$("#nmNotes").value,code:$("#nmCode").value,name:p?p.name:currentId,url:p?p.url:"",updatedAt:new Date().toISOString()};
+  dirty=false;
+  setNoteStatus("Saving…");
+  persistNote(currentId,body);
+}
+function closeNotes(){
+  if(dirty) saveCurrent();
+  $("#nm").hidden=true; document.body.style.overflow="";
+  currentId=null;
+}
+["#nmNotes","#nmCode"].forEach(sel=>$(sel).addEventListener("input",()=>{
+  dirty=true; setNoteStatus("Unsaved changes…");
+  clearTimeout(autoT); autoT=setTimeout(saveCurrent,1500);   // autosave after a pause in typing
+}));
+$("#nmCode").addEventListener("keydown",e=>{
+  if(e.key==="Tab"&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    e.preventDefault();
+    const t=e.target, a=t.selectionStart, b=t.selectionEnd;
+    t.setRangeText("    ",a,b,"end");
+    t.dispatchEvent(new Event("input"));
+  }
+});
+$("#nmSave").addEventListener("click",saveCurrent);
+$("#nmClose").addEventListener("click",closeNotes);
+$("#nm").addEventListener("click",e=>{ if(e.target.id==="nm") closeNotes(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#nm").hidden) closeNotes(); });
+$("#nmTpl").addEventListener("click",()=>{
+  const t=$("#nmNotes");
+  const tpl="Pattern: \nKey idea: \nSteps: \nMistakes I made: \nEdge cases: \nTime / space: ";
+  t.value=t.value.trim()?t.value+"\n\n"+tpl:tpl;
+  t.dispatchEvent(new Event("input")); t.focus();
+});
+function copyText(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent="Copied";setTimeout(()=>btn.textContent=o,1200);};
+  const fallback=()=>{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done();}catch(e){}ta.remove();};
+  try{ navigator.clipboard.writeText(text).then(done,fallback); }catch(e){ fallback(); }
+}
+$("#nmCopy").addEventListener("click",e=>copyText($("#nmCode").value,e.currentTarget));
+
+function renderNotebook(){
+  const q=($("#nbq").value||"").trim().toLowerCase();
+  const items=Object.entries(NOTES).filter(([id,n])=>(n.notes||"").trim()||(n.code||"").trim())
+    .map(([id,n])=>({id,n,p:BYID[id]}))
+    .filter(({n,p})=>!q||[(p&&p.name)||n.name||"",n.notes||"",n.code||""].join("\n").toLowerCase().includes(q))
+    .sort((a,b)=>String(b.n.updatedAt||"").localeCompare(String(a.n.updatedAt||"")));
+  const total=Object.values(NOTES).filter(n=>(n.notes||"").trim()||(n.code||"").trim()).length;
+  if(!items.length){
+    $("#nbList").innerHTML=`<div class="list"><div class="empty">${total?"Nothing matches that search.":"No notes yet. Press <b>Notes</b> or <b>Code</b> on any problem to start your notebook."}</div></div>`;
+    return;
+  }
+  $("#nbList").innerHTML=items.map(({id,n,p})=>{
+    const name=esc(String((p&&p.name)||n.name||id)), url=esc(String((p&&p.url)||n.url||"#"));
+    const chip=p?(p.lvl?`<span class="chip lvl ${p.lvl.toLowerCase()}">${p.lvl}</span>`:`<span class="chip tier t${p.tier}">${TIERNAME[p.tier]}</span>`):"";
+    const lines=(n.code||"").trim()?String(n.code).split("\n").length:0;
+    return `<div class="card nbcard" data-id="${esc(id)}">
+      <div class="plist-head"><a class="name" href="${url}" target="_blank" rel="noopener">${name}</a>
+        <span class="mono muted" style="font-size:12px">${n.updatedAt?new Date(n.updatedAt).toLocaleDateString():""}</span></div>
+      <div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted)">${chip}${p?`<span>${esc(p.topic)}</span>`:""}${stat(id)==="ac"?`<span class="chip status ac">Solved</span>`:""}</div>
+      ${(n.notes||"").trim()?`<div class="nbnotes">${esc(String(n.notes))}</div>`:""}
+      ${lines?`<details><summary>Final code · ${lines} lines</summary><pre class="nbcode"><code>${esc(String(n.code))}</code></pre></details>`:""}
+      <div class="bar"><button class="btn small" data-act="notes">Edit</button>${lines?`<button class="btn small" data-act="copy">Copy code</button>`:""}</div>
+    </div>`;
+  }).join("");
+}
+$("#nbq").addEventListener("input",renderNotebook);
 
 /* ---------- tick boxes ---------- */
 document.addEventListener("change",e=>{
@@ -890,7 +1083,9 @@ $("#jumpDay").addEventListener("click",()=>{const i=PLAN.findIndex(d=>d.some(p=>
 /* ---------- row actions ---------- */
 document.addEventListener("click",e=>{
   const b=e.target.closest("button[data-act]"); if(!b) return;
-  const id=b.closest(".row").dataset.id;
+  const id=b.closest("[data-id]").dataset.id;
+  if(b.dataset.act==="notes"||b.dataset.act==="code"){openNotes(id,b.dataset.act);return;}
+  if(b.dataset.act==="copy"){copyText((NOTES[id]||{}).code||"",b);return;}
   if(b.dataset.act==="cycle"){
     const next={todo:"ac",ac:"rev",rev:"todo"}[stat(id)];
     if(next==="todo") delete S.st[id]; else S.st[id]=Object.assign({},S.st[id],{s:next,d:S.st[id]&&S.st[id].d||today()});
