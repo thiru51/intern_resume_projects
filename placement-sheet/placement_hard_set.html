@@ -70,6 +70,9 @@ input.ctl{width:100%}
 .row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
 .row:first-child{border-top:0}
 .row .idx{font-family:var(--f-mono);color:var(--muted);font-size:12px;text-align:right}
+.row .cb{width:20px;height:20px;margin:0;accent-color:var(--ac);cursor:pointer;justify-self:center}
+.lvl{border-color:currentColor}.lvl.easy{color:var(--ac)}.lvl.medium{color:var(--rev)}.lvl.hard{color:var(--over)}
+.plist-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
 .row .main{min-width:0}
 .row .name{font-weight:600;text-decoration:none;color:var(--ink)}
 .row .name:hover{color:var(--accent);text-decoration:underline}
@@ -125,9 +128,8 @@ td:first-child{font-weight:700;white-space:nowrap}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:520px){
-  .row{grid-template-columns:minmax(0,1fr)}
-  .row .idx{display:none}
-  .row .acts{justify-content:flex-start}
+  .row{grid-template-columns:28px minmax(0,1fr)}
+  .row .acts{grid-column:2;justify-content:flex-start}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -153,6 +155,7 @@ td:first-child{font-weight:700;white-space:nowrap}
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="plan" aria-selected="true">Daily plan</button>
     <button role="tab" data-tab="all" aria-selected="false">All problems</button>
+    <button role="tab" data-tab="practice" aria-selected="false">Practice lists</button>
     <button role="tab" data-tab="quant" aria-selected="false">Quant puzzles</button>
     <button role="tab" data-tab="companies" aria-selected="false">Company patterns</button>
     <button role="tab" data-tab="trends" aria-selected="false">What's coming next</button>
@@ -203,6 +206,15 @@ td:first-child{font-weight:700;white-space:nowrap}
     <div class="list" id="allList"></div>
   </section>
 
+  <!-- PRACTICE -->
+  <section class="panel" id="tab-practice" hidden>
+    <div class="prose">
+      <h2>Practice lists</h2>
+      <p>Smaller topic lists to work through in order, easiest first. Tick a problem once you've got it accepted on LeetCode, however you solved it. A problem that is also in the Hard Set gets ticked in both places.</p>
+    </div>
+    <div id="practiceLists" class="panel"></div>
+  </section>
+
   <!-- QUANT -->
   <section class="panel" id="tab-quant" hidden>
     <div class="prose">
@@ -244,7 +256,8 @@ td:first-child{font-weight:700;white-space:nowrap}
         <li><b>Code it fully and submit it</b> on LeetCode, Codeforces or CSES. Only press <b>Solved</b> when the judge says Accepted. That is the only honest signal.</li>
         <li><b>Stuck at the time limit?</b> Press <b>Gave up</b>. The problem gets a Revisit tag. Read the editorial, then re-solve it from scratch two or three days later without looking.</li>
         <li><b>Do it in OA conditions.</b> One sitting, no autocomplete help, no looking up solutions mid-problem. Write your own template code (segment tree, DSU, modpow, Dijkstra) beforehand so you can paste it, like you would in a real test.</li>
-        <li><b>Click a status chip</b> any time to cycle it: To do → Solved → Revisit → To do.</li>
+        <li><b>Tick the box</b> next to a problem once it's accepted on the judge, however you solved it. Untick it to undo.</li>
+        <li><b>Click a status chip</b> any time to cycle it: To do → Solved → Revisit → To do. Use Revisit for problems you want to re-solve later.</li>
       </ol>
       <h3>A good daily rhythm</h3>
       <ul>
@@ -714,6 +727,31 @@ RAW.split("\n").forEach(line=>{
 const BYID = Object.fromEntries(P.map(p=>[p.id,p]));
 const BYNAME = Object.fromEntries(P.map(p=>[p.name.toLowerCase(),p]));
 
+/* ---------- practice lists ---------- */
+const LVLMINS={Easy:15,Medium:30,Hard:45};
+const PRACTICE=[
+ {title:"Sliding window",note:"Do these in order. They all use the grow / shrink / record skeleton.",items:[
+  ["Maximum Average Subarray I","maximum-average-subarray-i","Easy","fixed window"],
+  ["Longest Substring Without Repeating Characters","longest-substring-without-repeating-characters","Medium","shrink while a character repeats"],
+  ["Minimum Size Subarray Sum","minimum-size-subarray-sum","Medium","shortest window: shrink while valid"],
+  ["Max Consecutive Ones III","max-consecutive-ones-iii","Medium","at most k zeros in the window"],
+  ["Longest Repeating Character Replacement","longest-repeating-character-replacement","Medium","window length − most frequent count ≤ k"],
+  ["Fruit Into Baskets","fruit-into-baskets","Medium","at most 2 distinct values"],
+  ["Find All Anagrams in a String","find-all-anagrams-in-a-string","Medium","fixed window + need counts"],
+  ["Permutation in String","permutation-in-string","Medium","same as anagrams, return true/false"],
+  ["Minimum Window Substring","minimum-window-substring","Hard","need array + missing counter"],
+  ["Substring with Concatenation of All Words","substring-with-concatenation-of-all-words","Hard","window moves one word at a time"]
+ ]}
+];
+const INSET=new Set(P.map(p=>p.id));
+const PLISTS=PRACTICE.map(l=>({title:l.title,note:l.note,items:l.items.map(([name,slug,lvl,hint])=>{
+  const id="lc:"+slug;
+  const base=BYID[id]||{id,name,url:`https://leetcode.com/problems/${slug}/`,plat:"LC",cfLabel:"",tags:[]};
+  const item=Object.assign({},base,{lvl,topic:hint,mins:LVLMINS[lvl]});
+  if(!BYID[id]) BYID[id]=item;
+  return item;
+})}));
+
 /* ---------- storage ---------- */
 const KEY="hardset.v1";
 let S={st:{},perDay:12,day:0,tab:"plan",quant:{}};
@@ -750,16 +788,16 @@ let PLAN=buildPlan(S.perDay);
 const $=s=>document.querySelector(s);
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const STLABEL={todo:"To do",ac:"Solved",rev:"Revisit"};
-function rowHTML(p,i){
+function rowHTML(p,i,pre){
   const s=stat(p.id), rec=S.st[p.id]||{};
   const time=rec.t?` · <span class="mono">${fmt(rec.t)}</span>${rec.t<=p.mins*60?" ✓":""}`:"";
   const tags=p.tags.map(t=>`<span class="co" title="${esc(CO[t]||t)}">${t}</span>`).join(" ");
   return `<div class="row ${s==="ac"?"done":""}" data-id="${p.id}">
-    <div class="idx">${i!=null?i+1:""}</div>
+    <input type="checkbox" class="cb" id="${(pre||"r")+"-"+p.id.replace(/[^a-z0-9]/gi,"-")}" ${s==="ac"?"checked":""} aria-label="Mark ${esc(p.name)} as solved" title="Tick when you've submitted it on the judge">
     <div class="main">
       <a class="name" href="${p.url}" target="_blank" rel="noopener">${esc(p.name)}</a>
       <div class="meta">
-        <span class="chip tier t${p.tier}">${TIERNAME[p.tier]}</span>
+        ${p.lvl?`<span class="chip lvl ${p.lvl.toLowerCase()}">${p.lvl}</span>`:`<span class="chip tier t${p.tier}">${TIERNAME[p.tier]}</span>`}
         <span class="src">${p.plat}${p.cfLabel?" "+p.cfLabel:""}</span>
         <span>${esc(p.topic)}</span>
         <span class="mono">${p.mins}m</span>${time}
@@ -775,7 +813,7 @@ function rowHTML(p,i){
 function fmt(sec){sec=Math.max(0,Math.round(sec));const m=Math.floor(sec/60),s=sec%60;return (m>=60?Math.floor(m/60)+":"+String(m%60).padStart(2,"0"):String(m).padStart(2,"0"))+":"+String(s).padStart(2,"0");}
 
 function renderStats(){
-  const vals=Object.values(S.st), solved=vals.filter(v=>v.s==="ac");
+  const vals=Object.entries(S.st).filter(([id])=>INSET.has(id)).map(([,v])=>v), solved=vals.filter(v=>v.s==="ac");
   $("#sSolved").textContent=`${solved.length}/${P.length}`;
   $("#sToday").textContent=solved.filter(v=>v.d===today()).length;
   const days=new Set(solved.map(v=>v.d)); let k=0; const d=new Date();
@@ -801,15 +839,32 @@ function renderPlan(){
   $("#dBudget").textContent=`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
   const c=[1,2,3].map(t=>day.filter(p=>p.tier===t).length);
   $("#dMix").textContent=`${c[0]} · ${c[1]} · ${c[2]}`;
-  $("#dayList").innerHTML=day.map((p,i)=>rowHTML(p,i)).join("");
+  $("#dayList").innerHTML=day.map((p,i)=>rowHTML(p,i,"d")).join("");
 }
 function renderAll(){
   const q=$("#q").value.trim().toLowerCase(), t=$("#fTopic").value, tr=$("#fTier").value, sr=$("#fSrc").value, co=$("#fCo").value, st=$("#fStat").value;
   const list=P.filter(p=>(!q||p.name.toLowerCase().includes(q))&&(!t||p.topic===t)&&(!tr||p.tier==tr)&&(!sr||p.plat===sr)&&(!co||p.tags.includes(co))&&(!st||stat(p.id)===st));
   $("#allCount").textContent=`${list.length} of ${P.length} problems`;
-  $("#allList").innerHTML=list.length?list.map((p,i)=>rowHTML(p,i)).join(""):`<div class="empty">No problems match these filters. Try clearing one.</div>`;
+  $("#allList").innerHTML=list.length?list.map((p,i)=>rowHTML(p,i,"a")).join(""):`<div class="empty">No problems match these filters. Try clearing one.</div>`;
 }
-function renderAllViews(){renderStats();renderPlan();if(!$("#tab-all").hidden)renderAll();}
+function renderPractice(){
+  $("#practiceLists").innerHTML=PLISTS.map(l=>{
+    const done=l.items.filter(p=>stat(p.id)==="ac").length;
+    return `<div class="panel"><div class="plist-head"><h3>${esc(l.title)}</h3><span class="mono muted">${done}/${l.items.length} done</span></div>
+      <p class="muted">${esc(l.note)}</p>
+      <div class="list">${l.items.map((p,i)=>rowHTML(p,i,"p")).join("")}</div></div>`;
+  }).join("");
+}
+function renderAllViews(){renderStats();renderPlan();renderPractice();if(!$("#tab-all").hidden)renderAll();}
+
+/* ---------- tick boxes ---------- */
+document.addEventListener("change",e=>{
+  const cb=e.target.closest("input.cb"); if(!cb) return;
+  const id=cb.closest(".row").dataset.id;
+  if(cb.checked) S.st[id]=Object.assign({},S.st[id],{s:"ac",d:today()});
+  else delete S.st[id];
+  save(); renderAllViews();
+});
 
 /* ---------- filters setup ---------- */
 [...new Set(P.map(p=>p.topic))].forEach(t=>$("#fTopic").insertAdjacentHTML("beforeend",`<option>${esc(t)}</option>`));
