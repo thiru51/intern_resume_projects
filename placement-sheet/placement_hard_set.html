@@ -89,6 +89,22 @@ input.ctl{width:100%}
 .nbcard details summary{cursor:pointer;font-weight:600;font-size:14px}
 .nbcode{margin:8px 0 0;background:var(--sunk);border-radius:8px;padding:12px;overflow-x:auto;font-family:var(--f-mono);font-size:12.5px;line-height:1.5;tab-size:4}
 .storenote{font-size:13px}
+.lvl.cses,.lvl.cf{color:var(--muted)}
+.corepart{display:grid;gap:8px}
+.corepart h2{font-size:20px}
+.coretopic{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.coretopic>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:34px minmax(0,1fr) minmax(60px,140px) 52px;gap:10px;align-items:center;padding:11px 14px}
+.coretopic>summary::-webkit-details-marker{display:none}
+.coretopic>summary:hover{background:var(--sunk)}
+.coretopic[open]>summary{border-bottom:1px solid var(--line)}
+.coretopic .list{border:0;border-radius:0}
+.ctnum{color:var(--muted);font-size:12px;text-align:right}
+.cttitle{font-weight:650;font-family:var(--f-display);font-size:16px;min-width:0}
+.ctbar{display:block;height:6px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.ctbar span{display:block;height:100%;background:var(--ac);border-radius:99px}
+.ctcount{font-size:12.5px;text-align:right;color:var(--muted)}
+.coretopic.complete .ctcount{color:var(--ac);font-weight:600}
+@media (max-width:520px){.coretopic>summary{grid-template-columns:28px minmax(0,1fr) 46px}.ctbar{display:none}}
 .plist-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
 .row .main{min-width:0}
 .row .name{font-weight:600;text-decoration:none;color:var(--ink)}
@@ -172,6 +188,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="plan" aria-selected="true">Daily plan</button>
+    <button role="tab" data-tab="core" aria-selected="false">Core patterns</button>
     <button role="tab" data-tab="all" aria-selected="false">All problems</button>
     <button role="tab" data-tab="practice" aria-selected="false">Practice lists</button>
     <button role="tab" data-tab="notebook" aria-selected="false">My notebook</button>
@@ -209,6 +226,21 @@ td:first-child{font-weight:700;white-space:nowrap}
     </div>
     <div class="list" id="dayList"></div>
     <p class="note">Each day mixes all three tiers and many topics, the way a real OA throws unrelated problems at you. Time budgets are tighter than a normal OA on purpose: 30 / 45 / 60 minutes for T1 / T2 / T3.</p>
+  </section>
+
+  <!-- CORE PATTERNS -->
+  <section class="panel" id="tab-core" hidden>
+    <div class="prose">
+      <h2>Core patterns</h2>
+      <p>A few hand-picked problems per topic, ordered from the foundation pattern to the hardest. Each one teaches a different pattern, so solving a topic's problems on your own gives you a grip on that whole topic. Part A is the core syllabus; Part B covers advanced topics like segment trees, Fenwick trees and LCA.</p>
+      <p class="muted">For each problem: try it alone for 45–60 minutes, read only a hint if stuck, write the pattern and your mistake in Notes, then re-solve it from scratch 3 days later.</p>
+    </div>
+    <div class="bar">
+      <button class="btn small" id="coreOpenAll">Open all topics</button>
+      <button class="btn small" id="coreCloseAll">Close all</button>
+      <button class="btn small" id="coreNext">Go to next unfinished problem</button>
+    </div>
+    <div id="coreList" class="panel"></div>
   </section>
 
   <!-- ALL -->
@@ -497,7 +529,7 @@ Kalila and Dimna in the Logging Industry|cf:319C|3|Q
 Product Sum|cf:631E|3|Q
 The Fair Nut and Rectangles|cf:1083E|3|Q
 Yet Another Minimization Problem|cf:868F|3|Q
-The Bakery|cf:834D|3|Q
+The Bakery|cf:833B|3|Q
 Partition Game|cf:1527E|3|Q
 #Trees
 Binary Tree Maximum Path Sum|lc|1|G M A
@@ -798,6 +830,265 @@ const PRACTICE=[
  ]}
 ];
 const INSET=new Set(P.map(p=>p.id));
+
+/* ---------- core patterns sheet ---------- */
+// "#A|Topic" or "#B|Topic" starts a topic. Then: Name|source|level|what it teaches
+// source: lc (slug from name) | lc:slug | cses:ID | cf:86D     level: E M H CSES CF
+const CORE_RAW = `
+#A|Arrays & Hashing
+Longest Consecutive Sequence|lc|M|hash set + only start counting at the start of a run
+Product of Array Except Self|lc|M|prefix and suffix products, no division
+Majority Element II|lc|M|Boyer–Moore voting (candidates in O(1) space)
+Next Permutation|lc|M|in-place array reasoning: find pivot, swap, reverse
+First Missing Positive|lc|H|using the array itself as a hash map (cyclic placement)
+#A|Two Pointers
+Sort Colors|lc|M|3-way partition (Dutch national flag)
+3Sum|lc|M|sort + two pointers + skipping duplicates
+Container With Most Water|lc|M|why moving the shorter side is always safe
+Find the Duplicate Number|lc|M|fast and slow pointers on an array (Floyd)
+Trapping Rain Water|lc|H|two pointers carrying left-max and right-max
+#A|Sliding Window
+Longest Substring Without Repeating Characters|lc|M|variable window, longest valid
+Longest Repeating Character Replacement|lc|M|validity: window size − max frequency ≤ k
+Minimum Window Substring|lc|H|shortest valid window, need array + missing counter
+Subarrays with K Different Integers|lc|H|exactly K = atMost(K) − atMost(K − 1)
+Sliding Window Maximum|lc|H|monotonic deque inside a window
+#A|Prefix Sums & Difference Arrays
+Range Sum Query 2D - Immutable|lc|M|2D prefix sums
+Corporate Flight Bookings|lc|M|difference array for range updates
+Subarray Sum Equals K|lc|M|prefix sum + hash map count
+Contiguous Array|lc|M|transform (0 → −1) + first-occurrence map for longest
+Subarray Sums Divisible by K|lc|M|remainders + fixing negative modulo
+#A|Binary Search
+Find First and Last Position of Element in Sorted Array|lc|M|lower bound / upper bound boundaries
+Find Peak Element|lc|M|binary search on an unsorted array (follow the slope)
+Search in Rotated Sorted Array|lc|M|deciding which half is sorted
+Koko Eating Bananas|lc|M|binary search on the answer (minimise)
+Magnetic Force Between Two Balls|lc|M|binary search on the answer (maximise the minimum)
+Split Array Largest Sum|lc|H|minimise the maximum + greedy check
+Median of Two Sorted Arrays|lc|H|binary search on a partition, not a value
+#A|Stack & Monotonic Stack
+Decode String|lc|M|stack for nested structure
+Remove K Digits|lc|M|monotonic stack to build the smallest result greedily
+Largest Rectangle in Histogram|lc|H|nearest smaller element on both sides
+Sum of Subarray Minimums|lc|M|contribution technique + handling equal values
+Basic Calculator|lc|H|expression parsing with signs and brackets
+#A|Linked List
+Linked List Cycle II|lc|M|Floyd: detect a cycle and find its start
+Reorder List|lc|M|find middle + reverse + merge, combined
+Copy List with Random Pointer|lc|M|interleaving nodes / pointer mapping
+LRU Cache|lc|M|doubly linked list + hash map design
+Merge k Sorted Lists|lc|H|heap or divide and conquer on lists
+Reverse Nodes in k-Group|lc|H|full mastery of pointer reversal
+#A|Recursion & Backtracking
+Subsets II|lc|M|pick / skip + skipping duplicates
+Permutations II|lc|M|used[] array + duplicate handling
+Combination Sum II|lc|M|combinations with pruning
+Palindrome Partitioning|lc|M|the "where do I cut next?" partition pattern
+Word Search|lc|M|backtracking on a grid (mark, explore, unmark)
+N-Queens|lc|H|placing items under constraints
+#A|Greedy & Intervals
+Jump Game II|lc|M|farthest reach, BFS-like layers
+Non-overlapping Intervals|lc|M|sort by end time (activity selection)
+Car Pooling|lc|M|sweep over events (like minimum platforms)
+Gas Station|lc|M|"reset the start" proof
+Task Scheduler|lc|M|counting-based greedy formula
+Candy|lc|H|two-pass greedy (left pass, right pass)
+#A|Heaps
+Find Median from Data Stream|lc|H|two heaps
+IPO|lc|H|sort + heap: unlock options as you go
+Minimum Cost to Hire K Workers|lc|H|sort by one value, heap keeps the best k of another
+Minimum Number of Refueling Stops|lc|H|lazy greedy: decide later using a heap
+Smallest Range Covering Elements from K Lists|lc|H|k pointers moved with a heap
+#A|Binary Trees
+Binary Tree Level Order Traversal|lc|M|BFS by levels (basis for all view problems)
+Construct Binary Tree from Preorder and Inorder Traversal|lc|M|building a tree from traversals
+Lowest Common Ancestor of a Binary Tree|lc|M|combining answers from left and right
+All Nodes Distance K in Binary Tree|lc|M|turning a tree into a graph (parent pointers)
+Binary Tree Maximum Path Sum|lc|H|return one thing, update the global answer with another
+Serialize and Deserialize Binary Tree|lc|H|encoding structure, including null markers
+Vertical Order Traversal of a Binary Tree|lc|H|coordinates + custom sorting
+Binary Tree Cameras|lc|H|tree DP with several states per node
+#A|Binary Search Trees
+Validate Binary Search Tree|lc|M|passing (low, high) bounds down
+Kth Smallest Element in a BST|lc|M|inorder traversal = sorted order
+Delete Node in a BST|lc|M|the 3 deletion cases
+Maximum Sum BST in Binary Tree|lc|H|postorder: pass min / max / sum / isBST upwards
+#A|Graphs I: Traversal & Structure
+Rotting Oranges|lc|M|multi-source BFS
+Course Schedule II|lc|M|topological sort (Kahn) + cycle detection
+Is Graph Bipartite?|lc|M|two-colouring
+Find Eventual Safe States|lc|M|DFS colouring / reverse topological sort
+Word Ladder|lc|H|BFS on a graph you build yourself
+Critical Connections in a Network|lc|H|bridges with Tarjan's low-link
+Planets and Kingdoms|cses:1683|CSES|strongly connected components (Kosaraju)
+#A|Graphs II: Shortest Paths & MST
+Network Delay Time|lc|M|Dijkstra
+Path With Minimum Effort|lc|M|Dijkstra where the cost is a maximum, not a sum
+Cheapest Flights Within K Stops|lc|M|Bellman–Ford / BFS with a limit on steps
+Find the City With the Smallest Number of Neighbors at a Threshold Distance|lc|M|Floyd–Warshall (all pairs)
+Min Cost to Connect All Points|lc|M|minimum spanning tree (Prim / Kruskal)
+Minimum Cost to Make at Least One Valid Path in a Grid|lc|H|0-1 BFS with a deque
+Shortest Path to Get All Keys|lc|H|BFS on (cell, bitmask of keys) states
+Cycle Finding|cses:1197|CSES|Bellman–Ford negative cycle detection
+#A|DP I: 1D, Grid & State Machines
+House Robber II|lc|M|take / skip + handling a circle
+Decode Ways|lc|M|counting with conditions on a string
+Coin Change|lc|M|unbounded choices, minimum
+Best Time to Buy and Sell Stock with Cooldown|lc|M|state machine DP
+Dungeon Game|lc|H|grid DP filled backwards
+Cherry Pickup II|lc|H|3D DP: two walkers moving together
+#A|DP II: Knapsack & Subsets
+Partition Equal Subset Sum|lc|M|0/1 knapsack, yes/no
+Target Sum|lc|M|turning +/− into subset-sum counting
+Coin Change II|lc|M|loop order: combinations vs orderings
+Ones and Zeroes|lc|M|knapsack with 2 capacities
+Profitable Schemes|lc|H|knapsack with an "at least P" condition
+#A|DP III: Strings
+Longest Common Subsequence|lc|M|the basic two-string DP table
+Edit Distance|lc|M|insert / delete / replace transitions
+Longest Palindromic Subsequence|lc|M|DP on intervals of one string
+Distinct Subsequences|lc|H|counting matches
+Regular Expression Matching|lc|H|pattern matching with *
+#A|DP IV: LIS, Partitions & Intervals
+Longest Increasing Subsequence|lc|M|O(n²) DP, then O(n log n) with lower_bound
+Russian Doll Envelopes|lc|H|LIS in 2D (sorting trick)
+Maximum Profit in Job Scheduling|lc|H|DP + binary search for the previous job
+Palindrome Partitioning II|lc|H|partition DP ("where is the last cut?")
+Burst Balloons|lc|H|interval DP ("which one goes last?")
+#A|DP V: Trees & Digits
+House Robber III|lc|M|DP on trees (take / skip per node)
+Sum of Distances in Tree|lc|H|rerooting DP
+Difference Between Maximum and Minimum Price Sum|lc|H|rerooting with two values
+Number of Digit One|lc|H|digit DP basics
+Count Special Integers|lc|H|digit DP with a mask and the "tight" flag
+#A|Tries
+Implement Trie (Prefix Tree)|lc|M|insert / search / prefix
+Word Search II|lc|H|trie + backtracking together
+Maximum XOR of Two Numbers in an Array|lc|M|trie over bits
+Maximum XOR With an Element From Array|lc|H|offline queries + bit trie
+Palindrome Pairs|lc|H|trie / hashing on reversed words
+#A|Bit Manipulation
+Single Number II|lc|M|counting bits position by position
+Single Number III|lc|M|splitting into groups by the lowest set bit
+Bitwise AND of Numbers Range|lc|M|common prefix of binary numbers
+Count Triplets That Can Form Two Arrays of Equal XOR|lc|M|prefix XOR
+Divide Two Integers|lc|M|shifting, overflow edge cases
+#A|String Algorithms
+Find the Index of the First Occurrence in a String|lc|E|KMP prefix function
+Longest Palindromic Substring|lc|M|expand around centre (Manacher optional)
+Shortest Palindrome|lc|H|the KMP trick on s + "#" + reverse(s)
+Sum of Scores of Built Strings|lc|H|Z-function
+Longest Duplicate Substring|lc|H|rolling hash + binary search
+#A|Maths & Number Theory
+Count Primes|lc|M|sieve of Eratosthenes
+Pow(x, n)|lc|M|fast power, negative exponents
+Sum of Divisors|cses:1082|CSES|grouping by equal values of n / i
+Binomial Coefficients|cses:1079|CSES|nCr mod p with factorials + modular inverse
+Fibonacci Numbers|cses:1722|CSES|matrix exponentiation
+Largest Component Size by Common Factor|lc|H|factorisation + union-find
+#B|Union-Find (DSU)
+Redundant Connection|lc|M|cycle detection with DSU
+Accounts Merge|lc|M|DSU on strings / emails
+Remove Max Number of Edges to Keep Graph Fully Traversable|lc|H|two DSUs at once
+Checking Existence of Edge Length Limited Paths|lc|H|offline queries sorted + DSU
+Bricks Falling When Hit|lc|H|reverse time: add instead of remove
+#B|Segment Tree
+Range Sum Query - Mutable|lc|M|the basic segment tree: build, update, query
+Count of Smaller Numbers After Self|lc|H|coordinate compression + counting tree
+Subarray Sum Queries|cses:1190|CSES|nodes that store several values (max subarray)
+Range Updates and Sums|cses:1735|CSES|lazy propagation with two kinds of update
+Falling Squares|lc|H|lazy + compression on real coordinates
+Longest Increasing Subsequence II|lc|H|segment tree used to speed up a DP
+#B|Fenwick Tree (BIT)
+Dynamic Range Sum Queries|cses:1648|CSES|point update + range sum
+Range Update Queries|cses:1651|CSES|range update + point query (difference array in a BIT)
+Reverse Pairs|lc|H|counting pairs with a BIT
+Create Sorted Array through Instructions|lc|H|order statistics with a BIT
+Forest Queries II|cses:1739|CSES|2D Fenwick tree
+#B|Sparse Table, Binary Lifting & LCA
+Static Range Minimum Queries|cses:1647|CSES|sparse table, O(1) range min
+Kth Ancestor of a Tree Node|lc|H|binary lifting
+Company Queries II|cses:1688|CSES|LCA with binary lifting
+Distance Queries|cses:1135|CSES|distance using LCA + depths
+Maximize Value of Function in a Ball Passing Game|lc|H|binary lifting on a functional graph, with sums
+#B|Sqrt Decomposition & Mo's Algorithm
+Holes|cf:13E|CF|sqrt decomposition with block jumps
+Distinct Values Queries|cses:1734|CSES|offline queries (Mo's or BIT)
+Powerful array|cf:86D|CF|Mo's algorithm
+#B|Line Sweep & Coordinate Compression
+My Calendar III|lc|H|sweep with a sorted map
+Number of Flowers in Full Bloom|lc|H|sorted starts / ends + binary search
+The Skyline Problem|lc|H|sweep + multiset of active heights
+Rectangle Area II|lc|H|2D sweep + compression
+#B|Bitmask DP & SOS DP
+Minimum Number of Work Sessions to Finish the Tasks|lc|M|DP over subsets
+Number of Ways to Wear Different Hats to Each Other|lc|H|choosing which dimension becomes the mask
+Find the Shortest Superstring|lc|H|travelling-salesman-style bitmask DP
+Compatible Numbers|cf:165E|CF|sum over subsets (SOS DP)
+Jzzhu and Numbers|cf:449D|CF|SOS DP + inclusion–exclusion
+#B|DP Optimisations
+Jump Game VI|lc|M|monotonic deque to speed up a DP
+The Bakery|cf:833B|CF|segment tree + DP
+Kalila and Dimna in the Logging Industry|cf:319C|CF|convex hull trick
+Yet Another Minimization Problem|cf:868F|CF|divide and conquer optimisation
+#B|Meet in the Middle
+Closest Subsequence Sum|lc|H|split into halves + sort + two pointers
+Partition Array Into Two Arrays to Minimize Sum Difference|lc|H|halves grouped by count + binary search
+Split Array With Same Average|lc|H|meet in the middle on (size, sum)
+#B|Advanced Graphs
+Reconstruct Itinerary|lc|H|Euler path (Hierholzer)
+Cracking the Safe|lc|H|de Bruijn sequence / Euler circuit
+School Dance|cses:1696|CSES|bipartite matching
+Download Speed|cses:1694|CSES|maximum flow
+Giant Pizza|cses:1684|CSES|2-SAT using SCCs
+#B|Game Theory
+Can I Win|lc|M|win / lose memo over a bitmask
+Stone Game III|lc|H|minimax as "my score − opponent's score"
+Nim Game I|cses:1730|CSES|XOR rule of Nim
+Grundy's Game|cses:2207|CSES|Sprague–Grundy numbers
+Cat and Mouse|lc|H|solving a game backwards from known end states
+#B|Probability & Expected Value
+Knight Probability in Chessboard|lc|M|probability DP step by step
+New 21 Game|lc|M|probability DP + sliding window sum
+Bag of mice|cf:148D|CF|probability DP with two players
+Game on Tree|cf:280C|CF|linearity of expectation
+Beautiful Mirrors|cf:1265E|CF|expected value with equations
+#B|Design
+Insert Delete GetRandom O(1)|lc|M|array + hash map of positions
+Snapshot Array|lc|M|version history + binary search
+LFU Cache|lc|H|frequency buckets of linked lists
+All O\`one Data Structure|lc:all-oone-data-structure|H|O(1) max / min with buckets
+`;
+const LVLNAME={E:"Easy",M:"Medium",H:"Hard",CSES:"CSES",CF:"CF"};
+const LVLMINS2={Easy:15,Medium:30,Hard:45,CSES:45,CF:45};
+function sourceInfo(name,src){
+  if(src==="lc"||src.startsWith("lc:")){
+    const slug=src.includes(":")?src.slice(3):slugify(name);
+    return {id:"lc:"+slug,url:`https://leetcode.com/problems/${slug}/`,plat:"LC",cfLabel:""};
+  }
+  if(src.startsWith("cses:")){
+    const t=src.slice(5);
+    return {id:"cses:"+t,url:`https://cses.fi/problemset/task/${t}`,plat:"CSES",cfLabel:t};
+  }
+  const m=src.slice(3).match(/^(\d+)([A-Z]\d?)$/);
+  return {id:"cf:"+m[1]+m[2],url:`https://codeforces.com/problemset/problem/${m[1]}/${m[2]}`,plat:"CF",cfLabel:m[1]+m[2]};
+}
+const CORE=[];
+CORE_RAW.split("\n").forEach(line=>{
+  line=line.trim(); if(!line) return;
+  if(line[0]==="#"){
+    const [part,title]=line.slice(1).split("|");
+    CORE.push({part,title,num:CORE.length+1,key:"t"+(CORE.length+1),items:[]});
+    return;
+  }
+  const [name,src,lv,teach]=line.split("|");
+  const info=sourceInfo(name,src), lvl=LVLNAME[lv];
+  const base=BYID[info.id]||Object.assign({name,tags:[]},info);
+  const item=Object.assign({},base,{lvl,topic:teach,mins:LVLMINS2[lvl]});
+  if(!BYID[info.id]) BYID[info.id]=item;
+  CORE[CORE.length-1].items.push(item);
+});
 const PLISTS=PRACTICE.map(l=>({title:l.title,note:l.note,items:l.items.map(([name,slug,lvl,hint])=>{
   const id="lc:"+slug;
   const base=BYID[id]||{id,name,url:`https://leetcode.com/problems/${slug}/`,plat:"LC",cfLabel:"",tags:[]};
@@ -962,7 +1253,51 @@ function renderPractice(){
       <div class="list">${l.items.map((p,i)=>rowHTML(p,i,"p")).join("")}</div></div>`;
   }).join("");
 }
-function renderAllViews(){renderStats();renderPlan();renderPractice();renderNotebook();if(!$("#tab-all").hidden)renderAll();}
+const COREOPEN_KEY="hardset.coreOpen";
+let coreOpen=new Set();
+try{coreOpen=new Set(JSON.parse(localStorage.getItem(COREOPEN_KEY)||"[]"));}catch(e){}
+function saveCoreOpen(){try{localStorage.setItem(COREOPEN_KEY,JSON.stringify([...coreOpen]));}catch(e){}}
+function renderCore(){
+  const parts=[["A","Part A · Core topics"],["B","Part B · Advanced topics"]];
+  let html="";
+  parts.forEach(([key,label])=>{
+    const topics=CORE.filter(t=>t.part===key);
+    const all=topics.flatMap(t=>t.items);
+    const done=all.filter(p=>stat(p.id)==="ac").length;
+    html+=`<div class="corepart"><div class="plist-head"><h2>${label}</h2><span class="mono muted">${done}/${all.length} done</span></div>`;
+    topics.forEach(t=>{
+      const d=t.items.filter(p=>stat(p.id)==="ac").length;
+      const complete=d===t.items.length;
+      html+=`<details class="coretopic ${complete?"complete":""}" data-key="${t.key}" ${coreOpen.has(t.key)?"open":""}>
+        <summary><span class="ctnum mono">${t.num}</span><span class="cttitle">${esc(t.title)}</span>
+        <span class="ctbar" aria-hidden="true"><span style="width:${(100*d/t.items.length).toFixed(1)}%"></span></span>
+        <span class="mono ctcount">${d}/${t.items.length}</span></summary>
+        <div class="list">${t.items.map((p,i)=>rowHTML(p,i,"c")).join("")}</div>
+      </details>`;
+    });
+    html+="</div>";
+  });
+  $("#coreList").innerHTML=html;
+}
+$("#coreList").addEventListener("toggle",e=>{
+  const d=e.target; if(!d.classList||!d.classList.contains("coretopic")) return;
+  if(d.open) coreOpen.add(d.dataset.key); else coreOpen.delete(d.dataset.key);
+  saveCoreOpen();
+},true);
+$("#coreOpenAll").addEventListener("click",()=>{CORE.forEach(t=>coreOpen.add(t.key));saveCoreOpen();renderCore();});
+$("#coreCloseAll").addEventListener("click",()=>{coreOpen.clear();saveCoreOpen();renderCore();});
+$("#coreNext").addEventListener("click",()=>{
+  for(const t of CORE){
+    const p=t.items.find(x=>stat(x.id)!=="ac");
+    if(p){
+      coreOpen.add(t.key); saveCoreOpen(); renderCore();
+      const row=document.querySelector(`#coreList .row[data-id="${p.id}"]`);
+      if(row){ row.scrollIntoView({block:"center"}); row.querySelector("input.cb").focus({preventScroll:true}); }
+      return;
+    }
+  }
+});
+function renderAllViews(){renderStats();renderPlan();renderPractice();renderNotebook();renderCore();if(!$("#tab-all").hidden)renderAll();}
 
 /* ---------- notes & final code ---------- */
 // Saved in the page's database, in a private space only this viewer can read.
