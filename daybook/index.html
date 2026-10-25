@@ -1,0 +1,654 @@
+<title>Daybook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone-first column. Sticky tab bar, a "now / next" card up top,
+   then the day as a time-ordered timeline. Saffron marks "now" and actions. */
+:root {
+  --bg: #f4f5f8; --surface: #ffffff; --ink: #1b1f2e; --muted: #5f6679; --line: #dde0e8;
+  --accent: #c8610a; --accent-ink: #ffffff; --accent-soft: #fbecdc;
+  --c-ppt: #2f5fcc; --c-test: #bf3445; --c-prep: #6f45c8; --c-lab: #0f7d72; --c-life: #5d6577;
+  --good: #1d8a4e;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d;
+  --accent: #f0943a; --accent-ink: #1a1206; --accent-soft: #35240f;
+  --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd;
+  --good: #58c98a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d;
+  --accent: #f0943a; --accent-ink: #1a1206; --accent-soft: #35240f;
+  --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd;
+  --good: #58c98a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--f-body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.wrap { max-width: 720px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 48px; display: grid; gap: 18px }
+h1, h2 { font-family: var(--f-display); text-wrap: balance; margin: 0 }
+h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1 }
+h2 { font-size: 1.1rem; font-weight: 600 }
+.eyebrow { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700 }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+button, input, select, textarea { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+header.top { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap }
+.sync { font-size: .8rem; color: var(--muted) }
+
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 6px; display: flex; gap: 4px }
+nav.tabs button { flex: 1; border: 1px solid var(--line); background: var(--surface); padding: 9px 6px; border-radius: 10px; font-weight: 700; color: var(--muted) }
+nav.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+
+/* Quick add */
+form.add { display: flex; gap: 8px }
+form.add input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 14px }
+.btn { border: 0; border-radius: 12px; padding: 0 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); min-height: 46px }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line) }
+.btn.small { min-height: 34px; padding: 0 12px; border-radius: 9px; font-size: .9rem }
+.mic { width: 46px; padding: 0; display: grid; place-items: center }
+.mic.on { background: var(--c-test); color: #fff }
+.hint { font-size: .85rem; color: var(--muted); margin: -10px 0 0 }
+.flash { font-size: .9rem; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); margin: -6px 0 0 }
+
+/* Now / next */
+.now { background: var(--ink); color: var(--bg); border-radius: 16px; padding: 16px 18px; display: grid; gap: 10px }
+.now .eyebrow { color: inherit; opacity: .7 }
+.now .big { font-family: var(--f-display); font-size: 1.35rem; font-weight: 800; line-height: 1.2 }
+.now .focus { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 8px 12px; font-weight: 700 }
+.now .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .95rem }
+
+/* Values + habits */
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .9rem }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink) }
+.chip[aria-pressed="true"]::before { content: "✓ "; color: var(--accent); font-weight: 700 }
+
+/* Timeline */
+.section { display: grid; gap: 10px }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+ol.line { list-style: none; margin: 0; padding: 0; display: grid; border-left: 2px solid var(--line); margin-left: 52px }
+ol.line li { position: relative; padding: 8px 0 8px 14px; display: flex; gap: 10px; align-items: start; min-width: 0 }
+ol.line li .t { position: absolute; left: -62px; top: 10px; width: 50px; text-align: right; font-size: .8rem; color: var(--muted) }
+ol.line li::before { content: ""; position: absolute; left: -6px; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line) }
+ol.line li.is-now::before { background: var(--accent); border-color: var(--accent) }
+ol.line li.is-now .what { font-weight: 700 }
+ol.line li.past .what { color: var(--muted) }
+ol.line li.task::before { border-radius: 3px; border-color: var(--cat) }
+.what { flex: 1; min-width: 0 }
+.what small { display: block; color: var(--muted); font-size: .85rem }
+.dur { font-size: .8rem; color: var(--muted) }
+
+/* Tasks */
+ul.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
+ul.tasks li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; min-width: 0 }
+ul.tasks li.done .title { text-decoration: line-through; color: var(--muted) }
+.title { flex: 1; min-width: 0; overflow-wrap: anywhere }
+.title small { display: block; color: var(--muted); font-size: .82rem }
+.cat { --cat: var(--c-life); display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cat); border: 1px solid var(--cat); border-radius: 6px; padding: 1px 6px; margin-right: 6px; vertical-align: 1px }
+[data-cat="ppt"] { --cat: var(--c-ppt) } [data-cat="test"] { --cat: var(--c-test) } [data-cat="prep"] { --cat: var(--c-prep) } [data-cat="lab"] { --cat: var(--c-lab) } [data-cat="life"] { --cat: var(--c-life) }
+.check { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; color: var(--accent-ink) }
+.check[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff }
+.check[aria-pressed="true"]::after { content: "✓"; font-size: .85rem; font-weight: 700 }
+.icon-btn { border: 0; background: none; color: var(--muted); padding: 4px 6px; border-radius: 8px; font-size: .9rem }
+.icon-btn:hover { background: var(--bg) }
+.overdue { color: var(--c-test); font-weight: 700 }
+.empty { color: var(--muted); font-size: .95rem; padding: 14px; border: 1px dashed var(--line); border-radius: 12px }
+
+/* Routine editor */
+.rows { display: grid; gap: 8px }
+.rrow { display: grid; grid-template-columns: 110px 1fr 74px 96px 34px; gap: 6px; align-items: center }
+.rrow input, .rrow select, textarea, dialog input, dialog select { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 8px; min-width: 0; width: 100% }
+@media (max-width: 560px) { .rrow { grid-template-columns: 96px 1fr 34px; } .rrow .m, .rrow .k { grid-column: span 1 } .rrow .k { grid-column: 2 / span 2 } }
+textarea { min-height: 170px; resize: vertical }
+.bar { display: flex; gap: 8px; flex-wrap: wrap }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px }
+.card p { margin: 0 }
+
+dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); width: min(440px, calc(100% - 32px)); padding: 18px }
+dialog::backdrop { background: rgb(0 0 0 / .45) }
+dialog form { display: grid; gap: 10px }
+dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); font-weight: 700 }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+@media (prefers-reduced-motion: no-preference) { .flash { animation: pop .25s ease-out } @keyframes pop { from { transform: translateY(-4px); opacity: .4 } } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="dateLine">Today</div>
+      <h1 id="greet">Your day</h1>
+    </div>
+    <div class="sync" id="sync">Connecting…</div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-today" aria-selected="true" data-view="today">Today</button>
+    <button role="tab" id="tab-upcoming" aria-selected="false" data-view="upcoming">Upcoming</button>
+    <button role="tab" id="tab-routine" aria-selected="false" data-view="routine">Routine</button>
+  </nav>
+
+  <form class="add" id="addForm" autocomplete="off">
+    <input id="addInput" placeholder="e.g. Infosys PPT tomorrow 4pm" aria-label="Add a task in plain words">
+    <button type="button" class="btn ghost mic" id="micBtn" aria-label="Speak a task">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none"/></svg>
+    </button>
+    <button class="btn" id="addBtn">Add</button>
+  </form>
+  <p class="hint" id="hint">Type or speak naturally. "DBMS test Friday 10am", "Revise DP for 1 hour today", "Lab record due 28th".</p>
+  <div class="flash" id="flash" hidden></div>
+
+  <!-- TODAY -->
+  <section id="view-today" class="section" style="gap:18px">
+    <div class="now" id="nowCard">
+      <div class="eyebrow">Right now</div>
+      <div class="big" id="nowWhat">Loading your day…</div>
+      <div class="focus" id="nowFocus" hidden></div>
+      <div class="row"><span id="nowNext"></span><span class="mono" id="nowLeft"></span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Values I live by</h2><span class="sync" id="valCount"></span></div>
+      <div class="chips" id="values"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>To do today</h2><span class="sync" id="todoCount"></span></div>
+      <ul class="tasks" id="todayTasks"></ul>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>The day, hour by hour</h2><span class="sync" id="habitCount"></span></div>
+      <ol class="line" id="timeline"></ol>
+    </div>
+  </section>
+
+  <!-- UPCOMING -->
+  <section id="view-upcoming" class="section" hidden style="gap:18px">
+    <div id="upcoming" class="section" style="gap:18px"></div>
+  </section>
+
+  <!-- ROUTINE -->
+  <section id="view-routine" class="section" hidden style="gap:18px">
+    <div class="card">
+      <h2>Daily routine</h2>
+      <p class="sync">Blocks marked <b>work</b> are where tasks get suggested. Times are your usual day; change them anytime.</p>
+      <div class="rows" id="routineRows"></div>
+      <div class="bar">
+        <button class="btn ghost small" id="addBlock" type="button">Add block</button>
+        <button class="btn small" id="saveRoutine" type="button">Save routine</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Values</h2>
+      <p class="sync">One per line. They show on the Today tab so you can tick the ones you lived.</p>
+      <textarea id="valuesText" aria-label="Values, one per line"></textarea>
+      <div class="bar"><button class="btn small" id="saveValues" type="button">Save values</button></div>
+    </div>
+  </section>
+</div>
+
+<dialog id="editDlg">
+  <form method="dialog" id="editForm">
+    <h2>Edit task</h2>
+    <label>Task<input id="eTitle" required></label>
+    <div class="two">
+      <label>Type
+        <select id="eCat">
+          <option value="ppt">PPT</option><option value="test">Test</option><option value="prep">Prep</option><option value="lab">Lab</option><option value="life">Life</option>
+        </select>
+      </label>
+      <label>Minutes<input id="eMins" type="number" min="5" step="5"></label>
+    </div>
+    <div class="two">
+      <label>Day<input id="eDate" type="date"></label>
+      <label>Time<input id="eTime" type="time"></label>
+    </div>
+    <div class="bar" style="justify-content:space-between">
+      <button class="btn ghost small" value="delete" id="eDelete" type="button">Delete</button>
+      <span class="bar">
+        <button class="btn ghost small" value="cancel" formnovalidate>Cancel</button>
+        <button class="btn small" value="save" id="eSave">Save</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  // ---------- defaults (the routine and values you told me about) ----------
+  const DEFAULT_ROUTINE = [
+    { id: "run", label: "Wake up + run", start: "05:30", mins: 30, kind: "habit" },
+    { id: "gym", label: "Gym", start: "06:00", mins: 60, kind: "habit" },
+    { id: "bath", label: "Bath", start: "07:00", mins: 20, kind: "habit" },
+    { id: "temple", label: "Temple, talk to God", start: "07:30", mins: 15, kind: "habit" },
+    { id: "bfast", label: "Breakfast", start: "08:00", mins: 30, kind: "meal" },
+    { id: "work1", label: "Main work: prep / lab / tests / PPTs", start: "08:45", mins: 315, kind: "work" },
+    { id: "lunch", label: "Lunch", start: "14:00", mins: 45, kind: "meal" },
+    { id: "work2", label: "Afternoon work", start: "15:00", mins: 120, kind: "work" },
+    { id: "tea", label: "Tea with Kavin", start: "17:00", mins: 30, kind: "break" },
+    { id: "work3", label: "Evening work", start: "17:30", mins: 180, kind: "work" },
+    { id: "dinner", label: "Dinner", start: "20:30", mins: 45, kind: "meal" },
+    { id: "sleep", label: "Wind down + sleep", start: "22:30", mins: 30, kind: "habit" },
+  ];
+  const DEFAULT_VALUES = ["Stay private", "Hit the gym", "Dress well", "Learn to fight", "Talk to God", "Chase goals", "Be kind", "Stay humble", "Live life", "Be happy"];
+  const CAT_ORDER = { test: 0, ppt: 1, lab: 2, prep: 3, life: 4 };
+  const CAT_LABEL = { ppt: "PPT", test: "Test", prep: "Prep", lab: "Lab", life: "Life" };
+
+  // ---------- small helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const toMin = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+  const fromMin = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+  const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const fmtDur = (m) => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? " " + (m % 60) + "m" : ""}` : `${m}m`;
+  const niceDay = (s) => {
+    if (!s) return "No date";
+    const t = ymd(new Date());
+    if (s === t) return "Today";
+    if (s === ymd(addDays(new Date(), 1))) return "Tomorrow";
+    if (s === ymd(addDays(new Date(), -1))) return "Yesterday";
+    const d = new Date(s + "T00:00");
+    return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  };
+  const el = (tag, props = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else if (v !== undefined && v !== null && v !== false) n.setAttribute(k, v);
+    }
+    for (const c of kids) if (c != null) n.append(c);
+    return n;
+  };
+
+  // ---------- state ----------
+  const state = { tasks: [], routine: null, values: null, day: {}, view: "today" };
+  const today = () => ymd(new Date());
+  const routine = () => (state.routine && state.routine.length ? state.routine : DEFAULT_ROUTINE);
+  const values = () => (state.values && state.values.length ? state.values : DEFAULT_VALUES);
+
+  // ---------- storage: synced db when available, this-device storage otherwise ----------
+  let db = null, sample = null;
+  const LS = "daybook-v1";
+  const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch { return {}; } };
+  const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify({ tasks: state.tasks, routine: state.routine, values: state.values, days: localDays })); } catch {} };
+  let localDays = {};
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+  const api = {
+    async addTask(t) {
+      t = { done: false, createdAt: new Date().toISOString(), ...t };
+      if (db) return db.collection("tasks").add(t);
+      state.tasks.push({ id: uid(), ...t }); saveLocal(); render();
+    },
+    async updateTask(id, patch) {
+      if (db) return db.doc("tasks/" + id).update(patch);
+      Object.assign(state.tasks.find((x) => x.id === id) || {}, patch); saveLocal(); render();
+    },
+    async deleteTask(id) {
+      if (db) return db.doc("tasks/" + id).delete();
+      state.tasks = state.tasks.filter((x) => x.id !== id); saveLocal(); render();
+    },
+    async saveRoutine(blocks) {
+      if (db) return db.doc("config/routine").set({ blocks });
+      state.routine = blocks; saveLocal(); render();
+    },
+    async saveValues(list) {
+      if (db) return db.doc("config/values").set({ list });
+      state.values = list; saveLocal(); render();
+    },
+    async saveDay(day) {
+      if (db) return db.doc("days/" + today()).set(day);
+      localDays[today()] = day; state.day = day; saveLocal(); render();
+    },
+  };
+
+  function useLocal() {
+    const s = loadLocal();
+    state.tasks = s.tasks || []; state.routine = s.routine || null; state.values = s.values || null;
+    localDays = s.days || {}; state.day = localDays[today()] || {};
+    $("sync").textContent = "Saved on this device only";
+    render();
+  }
+
+  let daySub = null, subscribedDay = null;
+  function subscribeDay() {
+    if (!db || subscribedDay === today()) return;
+    if (daySub) daySub();
+    subscribedDay = today();
+    daySub = db.doc("days/" + subscribedDay).onSnapshot((s) => { state.day = (s.exists && s.data()) || {}; render(); });
+  }
+
+  async function connect() {
+    const c = window.claude;
+    if (!c || !c.use) { useLocal(); return; }
+    [db, sample] = await Promise.all([c.use("db").catch(() => null), c.use("sample").catch(() => null)]);
+    if (!db) { useLocal(); return; }
+    $("sync").textContent = "Synced across your devices";
+    db.collection("tasks").onSnapshot(
+      (snap) => { state.tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
+      () => { $("sync").textContent = "Sync paused, check your connection"; }
+    );
+    db.doc("config/routine").onSnapshot((s) => { state.routine = (s.exists && s.data().blocks) || null; render(); });
+    db.doc("config/values").onSnapshot((s) => { state.values = (s.exists && s.data().list) || null; render(); });
+    subscribeDay();
+  }
+
+  // ---------- planning logic ----------
+  function rankTasks(list) {
+    const t = today();
+    return [...list].sort((a, b) => {
+      const ad = a.date || "9999", bd = b.date || "9999";
+      if (ad !== bd) return ad < bd ? -1 : 1;
+      if ((a.time || "99") !== (b.time || "99")) return (a.time || "99") < (b.time || "99") ? -1 : 1;
+      return (CAT_ORDER[a.cat] ?? 9) - (CAT_ORDER[b.cat] ?? 9);
+    }).map((x) => ({ ...x, overdue: x.date && x.date < t }));
+  }
+  // What to work on in a work block: overdue first, then today's untimed tasks, then the nearest deadline.
+  function focusTask() {
+    const t = today();
+    const open = state.tasks.filter((x) => !x.done && (!x.time || x.date !== t));
+    const ranked = rankTasks(open);
+    return ranked.find((x) => x.date && x.date <= t) || ranked.find((x) => x.date) || ranked[0] || null;
+  }
+  function timelineItems() {
+    const t = today();
+    const items = routine().map((b) => ({ type: "block", start: toMin(b.start), mins: Number(b.mins) || 30, ...b }));
+    for (const x of state.tasks) if (x.date === t && x.time) items.push({ type: "task", start: toMin(x.time), mins: Number(x.mins) || 60, task: x, label: x.title });
+    return items.sort((a, b) => a.start - b.start || (a.type === "task" ? -1 : 1));
+  }
+  function nowAndNext() {
+    const n = nowMin(), items = timelineItems();
+    // A timed task wins over the routine block it sits inside.
+    const current = items.filter((i) => n >= i.start && n < i.start + i.mins).sort((a, b) => (a.type === "task" ? -1 : 1) - (b.type === "task" ? -1 : 1))[0];
+    const next = items.find((i) => i.start > n && i !== current);
+    return { current, next, n };
+  }
+
+  // ---------- rendering ----------
+  function taskRow(x, { showDay = false } = {}) {
+    const meta = [];
+    if (showDay || x.overdue) meta.push(x.overdue ? "Overdue · " + niceDay(x.date) : niceDay(x.date));
+    if (x.time) meta.push(x.time);
+    if (x.mins) meta.push(fmtDur(Number(x.mins)));
+    return el("li", { class: x.done ? "done" : "" },
+      el("button", { class: "check", "aria-pressed": String(!!x.done), "aria-label": (x.done ? "Mark not done: " : "Mark done: ") + x.title, onclick: () => api.updateTask(x.id, { done: !x.done }) }),
+      el("div", { class: "title" },
+        el("span", { class: "cat", "data-cat": x.cat || "life", text: CAT_LABEL[x.cat] || "Life" }),
+        x.title,
+        meta.length ? el("small", { class: x.overdue && !x.done ? "overdue" : "", text: meta.join(" · ") }) : null),
+      el("button", { class: "icon-btn", "aria-label": "Edit " + x.title, text: "Edit", onclick: () => openEdit(x) })
+    );
+  }
+
+  function renderToday() {
+    const t = today(), n = nowMin();
+    const d = new Date();
+    $("dateLine").textContent = d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    const h = d.getHours();
+    $("greet").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+
+    // Now / next
+    const { current, next } = nowAndNext();
+    const focus = focusTask();
+    if (current) {
+      $("nowWhat").textContent = current.label;
+      $("nowLeft").textContent = `${fmtDur(current.start + current.mins - n)} left`;
+    } else {
+      $("nowWhat").textContent = n < toMin(routine()[0]?.start || "06:00") ? "Rest. Your day hasn't started yet." : "Free time. Pick something below or rest.";
+      $("nowLeft").textContent = "";
+    }
+    const inWork = current && current.type === "block" && current.kind === "work";
+    $("nowFocus").hidden = !(inWork || (!current && focus));
+    if (focus) $("nowFocus").textContent = "Work on: " + focus.title + (focus.date ? " (" + (focus.date < t ? "overdue" : "due " + niceDay(focus.date).toLowerCase()) + ")" : "");
+    else $("nowFocus").textContent = "Nothing pending. Add a task above, or do placement prep.";
+    if (inWork) $("nowFocus").hidden = false;
+    $("nowNext").textContent = next ? `Next: ${next.label} at ${fromMin(next.start)}` : "Nothing else scheduled today";
+
+    // Values
+    const lived = state.day.values || {};
+    const vbox = $("values"); vbox.replaceChildren();
+    for (const v of values()) vbox.append(el("button", { class: "chip", "aria-pressed": String(!!lived[v]), text: v,
+      onclick: () => api.saveDay({ ...state.day, values: { ...lived, [v]: !lived[v] } }) }));
+    $("valCount").textContent = `${values().filter((v) => lived[v]).length}/${values().length} today`;
+
+    // To do today: overdue + today's tasks without a time
+    const list = rankTasks(state.tasks.filter((x) => (x.date && x.date < t && !x.done) || (x.date === t && !x.time)));
+    const ul = $("todayTasks"); ul.replaceChildren();
+    if (!list.length) ul.append(el("li", { class: "empty", text: "Nothing on the list for today. Add one above, like “Revise OS notes today”." }));
+    for (const x of list) ul.append(taskRow(x));
+    $("todoCount").textContent = list.length ? `${list.filter((x) => x.done).length}/${list.length} done` : "";
+
+    // Timeline
+    const doneBlocks = state.day.blocks || {};
+    const ol = $("timeline"); ol.replaceChildren();
+    const { current: cur } = nowAndNext();
+    let habits = 0, habitsDone = 0;
+    for (const i of timelineItems()) {
+      const past = n >= i.start + i.mins;
+      const li = el("li", { class: [i.type === "task" ? "task" : "", i === cur ? "is-now" : "", past ? "past" : ""].join(" ").trim() });
+      li.append(el("span", { class: "t mono", text: fromMin(i.start) }));
+      if (i.type === "task") {
+        li.setAttribute("data-cat", i.task.cat || "life");
+        li.append(el("button", { class: "check", "aria-pressed": String(!!i.task.done), "aria-label": "Mark done: " + i.task.title, onclick: () => api.updateTask(i.task.id, { done: !i.task.done }) }));
+        li.append(el("div", { class: "what" }, el("span", { class: "cat", "data-cat": i.task.cat || "life", text: CAT_LABEL[i.task.cat] || "Life" }), i.task.title, el("small", { text: fmtDur(i.mins) })));
+        li.append(el("button", { class: "icon-btn", text: "Edit", "aria-label": "Edit " + i.task.title, onclick: () => openEdit(i.task) }));
+      } else {
+        const tickable = i.kind !== "work";
+        if (tickable) { habits++; if (doneBlocks[i.id]) habitsDone++; }
+        li.append(tickable
+          ? el("button", { class: "check", "aria-pressed": String(!!doneBlocks[i.id]), "aria-label": "Did it: " + i.label, onclick: () => api.saveDay({ ...state.day, blocks: { ...doneBlocks, [i.id]: !doneBlocks[i.id] } }) })
+          : el("span", { class: "check", style: "border-style:dashed", "aria-hidden": "true" }));
+        const sub = i.kind === "work" && focus && !past ? "Suggested: " + focus.title : null;
+        li.append(el("div", { class: "what" }, i.label, sub ? el("small", { text: sub }) : null));
+        li.append(el("span", { class: "dur mono", text: fmtDur(i.mins) }));
+      }
+      ol.append(li);
+    }
+    $("habitCount").textContent = `${habitsDone}/${habits} routine done`;
+  }
+
+  function renderUpcoming() {
+    const t = today(), box = $("upcoming"); box.replaceChildren();
+    const open = rankTasks(state.tasks.filter((x) => !(x.done && x.date && x.date < t)));
+    const groups = new Map();
+    for (const x of open) {
+      const key = x.overdue ? "overdue" : x.date || "someday";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(x);
+    }
+    if (!groups.size) { box.append(el("p", { class: "empty", text: "No tasks yet. Add PPTs, tests and lab deadlines above and they'll line up here by day." })); return; }
+    const order = [...groups.keys()].sort((a, b) => (a === "overdue" ? -1 : b === "overdue" ? 1 : a === "someday" ? 1 : b === "someday" ? -1 : a < b ? -1 : 1));
+    for (const k of order) {
+      const items = groups.get(k);
+      const title = k === "overdue" ? "Overdue" : k === "someday" ? "No date yet" : niceDay(k);
+      const sec = el("div", { class: "section" }, el("div", { class: "section-head" }, el("h2", { text: title }), el("span", { class: "sync", text: k.length === 10 ? k.split("-").reverse().join("/") : "" })));
+      const ul = el("ul", { class: "tasks" });
+      for (const x of items) ul.append(taskRow(x, { showDay: k === "overdue" }));
+      sec.append(ul); box.append(sec);
+    }
+  }
+
+  let routineDraft = null;
+  function renderRoutine(force) {
+    if (force || !routineDraft) routineDraft = routine().map((b) => ({ ...b }));
+    const box = $("routineRows"); box.replaceChildren();
+    routineDraft.forEach((b, i) => {
+      const set = (k) => (e) => { routineDraft[i][k] = k === "mins" ? Number(e.target.value) : e.target.value; };
+      box.append(el("div", { class: "rrow" },
+        el("input", { type: "time", value: b.start, "aria-label": "Start time", id: "rs-" + i, onchange: set("start") }),
+        el("input", { value: b.label, "aria-label": "Block name", id: "rl-" + i, oninput: set("label") }),
+        el("input", { class: "m", type: "number", min: "5", step: "5", value: b.mins, "aria-label": "Minutes", id: "rm-" + i, oninput: set("mins") }),
+        (() => { const s = el("select", { class: "k", "aria-label": "Kind", id: "rk-" + i, onchange: set("kind") });
+          for (const k of ["habit", "work", "meal", "break"]) s.append(el("option", { value: k, text: k, selected: b.kind === k ? "" : null }));
+          return s; })(),
+        el("button", { class: "icon-btn", type: "button", text: "✕", "aria-label": "Remove " + b.label, onclick: () => { routineDraft.splice(i, 1); renderRoutine(); } })
+      ));
+    });
+    if (document.activeElement !== $("valuesText")) $("valuesText").value = values().join("\n");
+  }
+
+  function render() {
+    if (db) subscribeDay();
+    for (const v of ["today", "upcoming", "routine"]) {
+      $("view-" + v).hidden = state.view !== v;
+      $("tab-" + v).setAttribute("aria-selected", String(state.view === v));
+    }
+    renderToday();
+    renderUpcoming();
+    if (state.view !== "routine" || !routineDraft) renderRoutine(true);
+  }
+
+  // ---------- understanding what you type or say ----------
+  const WD = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  function guessCat(s) {
+    if (/\b(ppt|ppts|pre[- ]?placement|presentation|talk)\b/.test(s)) return "ppt";
+    if (/\b(test|exam|assessment|oa|quiz|interview round|coding round|hackerrank)\b/.test(s)) return "test";
+    if (/\b(lab|experiment|record|observation|viva)\b/.test(s)) return "lab";
+    if (/\b(dsa|leetcode|aptitude|prep|revise|revision|mock|resume|interview|dp|graphs|os|dbms|cn|oops|sql)\b/.test(s)) return "prep";
+    return "life";
+  }
+  function localParse(text) {
+    const base = new Date();
+    return text.split(/\n|;/).map((raw) => raw.trim()).filter(Boolean).map((raw) => {
+      let s = " " + raw.toLowerCase() + " ", date = null, time = null, mins = null;
+      const strip = (re) => { s = s.replace(re, " "); };
+      if (/\bday after tomorrow\b/.test(s)) { date = ymd(addDays(base, 2)); strip(/\bday after tomorrow\b/); }
+      else if (/\b(tomorrow|tmrw|tmr|tomo)\b/.test(s)) { date = ymd(addDays(base, 1)); strip(/\b(tomorrow|tmrw|tmr|tomo)\b/); }
+      else if (/\b(today|tonight)\b/.test(s)) { date = ymd(base); strip(/\b(today|tonight)\b/); }
+      const wd = s.match(/\b(next |this |on )?(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(day|nesday|sday|urday)?\b/);
+      if (!date && wd) {
+        const idx = WD.findIndex((w) => w.startsWith(wd[2].slice(0, 3)));
+        let diff = (idx - base.getDay() + 7) % 7; if (diff === 0 || wd[1] === "next ") diff = diff || 7;
+        date = ymd(addDays(base, diff)); strip(wd[0]);
+      }
+      const dm = s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)?\s*(?:of\s*)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/) ||
+                 s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)\b/);
+      if (!date && dm) {
+        const day = Number(dm[2]); const m = dm[4] ? MON.indexOf(dm[4]) : base.getMonth();
+        let d = new Date(base.getFullYear(), m, day); if (d < new Date(base.getFullYear(), base.getMonth(), base.getDate())) d = dm[4] ? new Date(base.getFullYear() + 1, m, day) : new Date(base.getFullYear(), m + 1, day);
+        date = ymd(d); strip(dm[0]);
+      }
+      const tm = s.match(/\b(at |@ ?)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)\b/) || s.match(/\b(at |@ ?)(\d{1,2})(?:[:.](\d{2}))?\b/) || s.match(/\b()(\d{1,2})[:.](\d{2})\b/);
+      if (tm) {
+        let hh = Number(tm[2]); const mm = Number(tm[3] || 0);
+        if (tm[4] === "pm" && hh < 12) hh += 12; if (tm[4] === "am" && hh === 12) hh = 0;
+        if (!tm[4] && hh >= 1 && hh <= 7) hh += 12; // "at 4" almost always means 4pm
+        if (hh < 24 && mm < 60) { time = `${pad(hh)}:${pad(mm)}`; strip(tm[0]); }
+      }
+      const du = s.match(/\bfor (\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minutes)\b/);
+      if (du) { mins = Math.round(Number(du[1]) * (du[2].startsWith("h") ? 60 : 1)); strip(du[0]); }
+      const title = s.replace(/\b(on|at|by|due|in the)\s*$/g, "").replace(/\s+/g, " ").trim().replace(/^(remind me to|i have|i've got|add|to)\s+/, "");
+      const pretty = title ? title.charAt(0).toUpperCase() + title.slice(1) : raw;
+      return { title: pretty.replace(/\b(ppt|dbms|os|cn|dsa|oops|sql|dp)\b/gi, (w) => w.toUpperCase()), cat: guessCat(" " + raw.toLowerCase() + " "), date: date || ymd(base), time, mins };
+    });
+  }
+  async function smartParse(text) {
+    if (!sample) return localParse(text);
+    const d = new Date();
+    const prompt = `You turn a busy engineering student's quick note into planner tasks.
+Today is ${d.toLocaleDateString("en-GB", { weekday: "long" })} ${ymd(d)}. Current time ${fromMin(nowMin())}.
+Categories: "ppt" (company pre-placement talks/presentations), "test" (company tests, online assessments, interviews, college exams), "prep" (placement prep: DSA, aptitude, core subjects, resume, mock interviews), "lab" (lab work, records, experiments, viva), "life" (anything personal).
+Rules: one note can hold several tasks. If no day is mentioned, use today. Resolve words like "tomorrow", "friday", "28th" into real dates on or after today. "time" is 24h "HH:MM" only if a clock time is said ("at 4" means 16:00 unless clearly morning), else null. "mins" is a duration if given, else 60 for ppt/test, else null. Keep company and subject names in the title; keep titles short.
+Reply with only a JSON array like [{"title":"Infosys PPT","cat":"ppt","date":"2026-10-26","time":"16:00","mins":60}]
+
+Note: ${text}`;
+    try {
+      const out = await sample.json(prompt, { modelTier: "quick" });
+      const arr = (Array.isArray(out) ? out : [out]).filter((x) => x && typeof x.title === "string" && x.title.trim());
+      if (!arr.length) return localParse(text);
+      return arr.map((x) => ({
+        title: x.title.trim().slice(0, 140),
+        cat: CAT_LABEL[x.cat] ? x.cat : guessCat(x.title.toLowerCase()),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(x.date || "") ? x.date : today(),
+        time: /^\d{2}:\d{2}$/.test(x.time || "") ? x.time : null,
+        mins: Number(x.mins) > 0 ? Math.round(Number(x.mins)) : null,
+      }));
+    } catch (e) {
+      if (e && e.code === "not_granted") sample = null;
+      return localParse(text);
+    }
+  }
+
+  function flash(msg) {
+    const f = $("flash"); f.textContent = msg; f.hidden = false;
+    clearTimeout(flash.t); flash.t = setTimeout(() => { f.hidden = true; }, 6000);
+  }
+
+  $("addForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = $("addInput").value.trim(); if (!text) return;
+    $("addBtn").disabled = true; $("addBtn").textContent = "Adding…";
+    try {
+      const tasks = await smartParse(text);
+      for (const t of tasks) await api.addTask(t);
+      $("addInput").value = "";
+      flash("Added: " + tasks.map((t) => `${t.title} (${niceDay(t.date)}${t.time ? " " + t.time : ""})`).join(", ") + ". Tap Edit if anything is off.");
+    } catch {
+      flash("Couldn't save that. Check your connection and try again.");
+    } finally { $("addBtn").disabled = false; $("addBtn").textContent = "Add"; }
+  });
+
+  // ---------- voice ----------
+  $("micBtn").addEventListener("click", () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const tip = "Voice input is blocked inside this page. Tap the microphone on your phone keyboard (or Win+H on Windows) and speak into the box instead.";
+    if (!SR) { flash(tip); $("addInput").focus(); return; }
+    try {
+      const rec = new SR(); rec.lang = "en-IN"; rec.interimResults = true;
+      $("micBtn").classList.add("on");
+      rec.onresult = (ev) => { $("addInput").value = [...ev.results].map((r) => r[0].transcript).join(" "); if (ev.results[ev.results.length - 1].isFinal) $("addForm").requestSubmit(); };
+      rec.onerror = () => { flash(tip); $("addInput").focus(); };
+      rec.onend = () => $("micBtn").classList.remove("on");
+      rec.start();
+    } catch { $("micBtn").classList.remove("on"); flash(tip); }
+  });
+
+  // ---------- edit dialog ----------
+  let editing = null;
+  function openEdit(x) {
+    editing = x;
+    $("eTitle").value = x.title; $("eCat").value = x.cat || "life"; $("eMins").value = x.mins || "";
+    $("eDate").value = x.date || ""; $("eTime").value = x.time || "";
+    $("editDlg").showModal();
+  }
+  $("editDlg").addEventListener("close", () => {
+    if ($("editDlg").returnValue === "save" && editing) {
+      api.updateTask(editing.id, { title: $("eTitle").value.trim() || editing.title, cat: $("eCat").value, mins: Number($("eMins").value) || null, date: $("eDate").value || null, time: $("eTime").value || null });
+    }
+    editing = null;
+  });
+  $("eDelete").addEventListener("click", () => { if (editing) api.deleteTask(editing.id); $("editDlg").close("delete"); });
+
+  // ---------- tabs + routine editor ----------
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => {
+    state.view = b.dataset.view; if (state.view === "routine") renderRoutine(true); render();
+    try { localStorage.setItem("daybook-tab", state.view); } catch {}
+  }));
+  $("addBlock").addEventListener("click", () => { routineDraft.push({ id: uid(), label: "New block", start: "12:00", mins: 30, kind: "habit" }); renderRoutine(); });
+  $("saveRoutine").addEventListener("click", async () => {
+    const clean = routineDraft.filter((b) => b.label && b.start).map((b) => ({ id: b.id || uid(), label: b.label.trim(), start: b.start, mins: Number(b.mins) || 30, kind: b.kind || "habit" })).sort((a, b) => toMin(a.start) - toMin(b.start));
+    try { await api.saveRoutine(clean); flash("Routine saved."); } catch { flash("Couldn't save the routine. Try again."); }
+  });
+  $("saveValues").addEventListener("click", async () => {
+    const list = $("valuesText").value.split("\n").map((s) => s.trim()).filter(Boolean);
+    try { await api.saveValues(list); flash("Values saved."); } catch { flash("Couldn't save your values. Try again."); }
+  });
+
+  try { const v = localStorage.getItem("daybook-tab"); if (v === "today" || v === "upcoming" || v === "routine") state.view = v; } catch {}
+  render();
+  connect();
+  setInterval(render, 60 * 1000); // keep "now" fresh
+})();
+</script>
