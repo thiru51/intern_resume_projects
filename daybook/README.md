@@ -10,7 +10,10 @@ tests, placement prep, lab work) and answers one question: **what should I do ri
   During a work block it picks the most urgent task for you (overdue first, then today, then nearest deadline).
 - **Plain-English quick add**: type or dictate things like
   `Infosys PPT tomorrow 4pm`, `DBMS test friday 10am`, `revise DP for 2 hours today`, `lab record due 28th`.
-  It works out the date, time, length and type (PPT / Test / Prep / Lab / Life).
+  It works out the date, time, length and type (Apply / PPT / Test / Prep / Lab / Life).
+- **Paste a placement notice**: copy a whole announcement from the WhatsApp group (Name, Resume Deadline,
+  Test schedule, ...) and paste it in. Every deadline and test becomes its own task, with the details kept as notes.
+  Deadlines that already passed are flagged.
 - **Hour-by-hour timeline** of the day, with tick boxes for routine habits.
 - **Values row** you can tick each day (stay private, hit the gym, be kind, ...).
 - **Upcoming** tab: everything grouped by day, with overdue items on top.

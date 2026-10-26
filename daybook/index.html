@@ -9,7 +9,7 @@
 :root {
   --bg: #f4f5f8; --surface: #ffffff; --ink: #1b1f2e; --muted: #5f6679; --line: #dde0e8;
   --accent: #c8610a; --accent-ink: #ffffff; --accent-soft: #fbecdc;
-  --c-ppt: #2f5fcc; --c-test: #bf3445; --c-prep: #6f45c8; --c-lab: #0f7d72; --c-life: #5d6577;
+  --c-ppt: #2f5fcc; --c-test: #bf3445; --c-prep: #6f45c8; --c-lab: #0f7d72; --c-life: #5d6577; --c-apply: #a05a00;
   --good: #1d8a4e;
   --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -18,12 +18,12 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d;
   --accent: #f0943a; --accent-ink: #1a1206; --accent-soft: #35240f;
-  --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd;
+  --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd; --c-apply: #e8b45a;
   --good: #58c98a; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d;
   --accent: #f0943a; --accent-ink: #1a1206; --accent-soft: #35240f;
-  --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd;
+  --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd; --c-apply: #e8b45a;
   --good: #58c98a; color-scheme: dark }
 
 * { box-sizing: border-box }
@@ -48,7 +48,8 @@ nav.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg)
 
 /* Quick add */
 form.add { display: flex; gap: 8px }
-form.add input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 14px }
+form.add textarea { flex: 1; min-width: 0; min-height: 46px; max-height: 260px; resize: none; overflow-y: auto; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 11px 14px; line-height: 1.4 }
+form.add { align-items: flex-end }
 .btn { border: 0; border-radius: 12px; padding: 0 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); min-height: 46px }
 .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line) }
 .btn.small { min-height: 34px; padding: 0 12px; border-radius: 9px; font-size: .9rem }
@@ -91,8 +92,9 @@ ul.tasks li { background: var(--surface); border: 1px solid var(--line); border-
 ul.tasks li.done .title { text-decoration: line-through; color: var(--muted) }
 .title { flex: 1; min-width: 0; overflow-wrap: anywhere }
 .title small { display: block; color: var(--muted); font-size: .82rem }
+.title .note { display: block; color: var(--muted); font-size: .82rem; white-space: pre-line; margin-top: 2px }
 .cat { --cat: var(--c-life); display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cat); border: 1px solid var(--cat); border-radius: 6px; padding: 1px 6px; margin-right: 6px; vertical-align: 1px }
-[data-cat="ppt"] { --cat: var(--c-ppt) } [data-cat="test"] { --cat: var(--c-test) } [data-cat="prep"] { --cat: var(--c-prep) } [data-cat="lab"] { --cat: var(--c-lab) } [data-cat="life"] { --cat: var(--c-life) }
+[data-cat="ppt"] { --cat: var(--c-ppt) } [data-cat="test"] { --cat: var(--c-test) } [data-cat="prep"] { --cat: var(--c-prep) } [data-cat="lab"] { --cat: var(--c-lab) } [data-cat="life"] { --cat: var(--c-life) } [data-cat="apply"] { --cat: var(--c-apply) }
 .check { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; color: var(--accent-ink) }
 .check[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff }
 .check[aria-pressed="true"]::after { content: "✓"; font-size: .85rem; font-weight: 700 }
@@ -104,9 +106,10 @@ ul.tasks li.done .title { text-decoration: line-through; color: var(--muted) }
 /* Routine editor */
 .rows { display: grid; gap: 8px }
 .rrow { display: grid; grid-template-columns: 110px 1fr 74px 96px 34px; gap: 6px; align-items: center }
-.rrow input, .rrow select, textarea, dialog input, dialog select { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 8px; min-width: 0; width: 100% }
+.rrow input, .rrow select, #valuesText, dialog input, dialog select, dialog textarea { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 8px; min-width: 0; width: 100% }
 @media (max-width: 560px) { .rrow { grid-template-columns: 96px 1fr 34px; } .rrow .m, .rrow .k { grid-column: span 1 } .rrow .k { grid-column: 2 / span 2 } }
-textarea { min-height: 170px; resize: vertical }
+#valuesText, #eNotes { min-height: 170px; resize: vertical }
+#eNotes { min-height: 90px }
 .bar { display: flex; gap: 8px; flex-wrap: wrap }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px }
 .card p { margin: 0 }
@@ -135,13 +138,13 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
   </nav>
 
   <form class="add" id="addForm" autocomplete="off">
-    <input id="addInput" placeholder="e.g. Infosys PPT tomorrow 4pm" aria-label="Add a task in plain words">
+    <textarea id="addInput" rows="1" placeholder="e.g. Infosys PPT tomorrow 4pm, or paste a placement notice" aria-label="Add a task in plain words, or paste an announcement"></textarea>
     <button type="button" class="btn ghost mic" id="micBtn" aria-label="Speak a task">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none"/></svg>
     </button>
     <button class="btn" id="addBtn">Add</button>
   </form>
-  <p class="hint" id="hint">Type or speak naturally. "DBMS test Friday 10am", "Revise DP for 1 hour today", "Lab record due 28th".</p>
+  <p class="hint" id="hint">Type or speak naturally, like "DBMS test Friday 10am". You can also paste a whole placement notice from WhatsApp and it pulls out every deadline and test.</p>
   <div class="flash" id="flash" hidden></div>
 
   <!-- TODAY -->
@@ -201,7 +204,7 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
     <div class="two">
       <label>Type
         <select id="eCat">
-          <option value="ppt">PPT</option><option value="test">Test</option><option value="prep">Prep</option><option value="lab">Lab</option><option value="life">Life</option>
+          <option value="ppt">PPT</option><option value="test">Test</option><option value="prep">Prep</option><option value="apply">Apply</option><option value="lab">Lab</option><option value="life">Life</option>
         </select>
       </label>
       <label>Minutes<input id="eMins" type="number" min="5" step="5"></label>
@@ -210,6 +213,7 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
       <label>Day<input id="eDate" type="date"></label>
       <label>Time<input id="eTime" type="time"></label>
     </div>
+    <label>Notes<textarea id="eNotes"></textarea></label>
     <div class="bar" style="justify-content:space-between">
       <button class="btn ghost small" value="delete" id="eDelete" type="button">Delete</button>
       <span class="bar">
@@ -238,8 +242,8 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
     { id: "sleep", label: "Wind down + sleep", start: "22:30", mins: 30, kind: "habit" },
   ];
   const DEFAULT_VALUES = ["Stay private", "Hit the gym", "Dress well", "Learn to fight", "Talk to God", "Chase goals", "Be kind", "Stay humble", "Live life", "Be happy"];
-  const CAT_ORDER = { test: 0, ppt: 1, lab: 2, prep: 3, life: 4 };
-  const CAT_LABEL = { ppt: "PPT", test: "Test", prep: "Prep", lab: "Lab", life: "Life" };
+  const CAT_ORDER = { apply: 0, test: 1, ppt: 2, lab: 3, prep: 4, life: 5 };
+  const CAT_LABEL = { apply: "Apply", ppt: "PPT", test: "Test", prep: "Prep", lab: "Lab", life: "Life" };
 
   // ---------- small helpers ----------
   const $ = (id) => document.getElementById(id);
@@ -386,7 +390,8 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
       el("div", { class: "title" },
         el("span", { class: "cat", "data-cat": x.cat || "life", text: CAT_LABEL[x.cat] || "Life" }),
         x.title,
-        meta.length ? el("small", { class: x.overdue && !x.done ? "overdue" : "", text: meta.join(" · ") }) : null),
+        meta.length ? el("small", { class: x.overdue && !x.done ? "overdue" : "", text: meta.join(" · ") }) : null,
+        x.notes ? el("span", { class: "note", text: x.notes }) : null),
       el("button", { class: "icon-btn", "aria-label": "Edit " + x.title, text: "Edit", onclick: () => openEdit(x) })
     );
   }
@@ -513,13 +518,14 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
   const WD = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
   const MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
   function guessCat(s) {
+    if (/\b(resume|cv|register|registration|apply|application|form)\b/.test(s)) return "apply";
     if (/\b(ppt|ppts|pre[- ]?placement|presentation|talk)\b/.test(s)) return "ppt";
     if (/\b(test|exam|assessment|oa|quiz|interview round|coding round|hackerrank)\b/.test(s)) return "test";
     if (/\b(lab|experiment|record|observation|viva)\b/.test(s)) return "lab";
     if (/\b(dsa|leetcode|aptitude|prep|revise|revision|mock|resume|interview|dp|graphs|os|dbms|cn|oops|sql)\b/.test(s)) return "prep";
     return "life";
   }
-  function localParse(text) {
+  function localParse(text, { keepPast = false } = {}) {
     const base = new Date();
     return text.split(/\n|;/).map((raw) => raw.trim()).filter(Boolean).map((raw) => {
       let s = " " + raw.toLowerCase() + " ", date = null, time = null, mins = null;
@@ -527,18 +533,18 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
       if (/\bday after tomorrow\b/.test(s)) { date = ymd(addDays(base, 2)); strip(/\bday after tomorrow\b/); }
       else if (/\b(tomorrow|tmrw|tmr|tomo)\b/.test(s)) { date = ymd(addDays(base, 1)); strip(/\b(tomorrow|tmrw|tmr|tomo)\b/); }
       else if (/\b(today|tonight)\b/.test(s)) { date = ymd(base); strip(/\b(today|tonight)\b/); }
+      const dm = s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)?\s*(?:of\s*)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/) ||
+                 s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)\b/);
+      if (!date && dm) {
+        const day = Number(dm[2]); const m = dm[4] ? MON.indexOf(dm[4]) : base.getMonth();
+        let d = new Date(base.getFullYear(), m, day); if (!keepPast && d < new Date(base.getFullYear(), base.getMonth(), base.getDate())) d = dm[4] ? new Date(base.getFullYear() + 1, m, day) : new Date(base.getFullYear(), m + 1, day);
+        date = ymd(d); strip(dm[0]);
+      }
       const wd = s.match(/\b(next |this |on )?(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(day|nesday|sday|urday)?\b/);
       if (!date && wd) {
         const idx = WD.findIndex((w) => w.startsWith(wd[2].slice(0, 3)));
         let diff = (idx - base.getDay() + 7) % 7; if (diff === 0 || wd[1] === "next ") diff = diff || 7;
         date = ymd(addDays(base, diff)); strip(wd[0]);
-      }
-      const dm = s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)?\s*(?:of\s*)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/) ||
-                 s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)\b/);
-      if (!date && dm) {
-        const day = Number(dm[2]); const m = dm[4] ? MON.indexOf(dm[4]) : base.getMonth();
-        let d = new Date(base.getFullYear(), m, day); if (d < new Date(base.getFullYear(), base.getMonth(), base.getDate())) d = dm[4] ? new Date(base.getFullYear() + 1, m, day) : new Date(base.getFullYear(), m + 1, day);
-        date = ymd(d); strip(dm[0]);
       }
       const tm = s.match(/\b(at |@ ?)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)\b/) || s.match(/\b(at |@ ?)(\d{1,2})(?:[:.](\d{2}))?\b/) || s.match(/\b()(\d{1,2})[:.](\d{2})\b/);
       if (tm) {
@@ -554,30 +560,50 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
       return { title: pretty.replace(/\b(ppt|dbms|os|cn|dsa|oops|sql|dp)\b/gi, (w) => w.toUpperCase()), cat: guessCat(" " + raw.toLowerCase() + " "), date: date || ymd(base), time, mins };
     });
   }
+  // Placement-portal notices come as "Key: value" lines. Without AI, turn each dated line into a task.
+  const isNotice = (text) => /^\s*(name|company)\s*:/im.test(text) || (text.match(/^[^\n:]{2,40}:/gm) || []).length >= 3;
+  function parseNotice(text) {
+    const kv = {};
+    for (const line of text.split("\n")) { const m = line.match(/^\s*([^:]{2,40}):\s*(.+)$/); if (m) kv[m[1].trim().toLowerCase()] = m[2].trim(); }
+    const company = kv.name || kv.company || "Company";
+    const details = ["profile", "role", "eligibility", "venue", "ctc", "stipend", "note"].filter((k) => kv[k]).map((k) => `${k[0].toUpperCase() + k.slice(1)}: ${kv[k]}`).join("\n");
+    const out = [];
+    for (const [k, v] of Object.entries(kv)) {
+      if (!/deadline|test|ppt|interview|schedule|assessment|round|talk/.test(k)) continue;
+      const [p] = localParse(v, { keepPast: true });
+      if (!p || p.date === today() && !/today|tonight/i.test(v) && !/\d/.test(v)) continue;
+      const cat = /deadline|resume|register/.test(k) ? "apply" : /ppt|talk/.test(k) ? "ppt" : "test";
+      const label = cat === "apply" ? "submit resume" : k.replace(/schedule/, "").trim();
+      out.push({ title: `${company}: ${label}`, cat, date: p.date, time: p.time || (/eod|end of day/i.test(v) ? "23:59" : null), mins: cat === "apply" ? 30 : 120, notes: [v, details].filter(Boolean).join("\n") });
+    }
+    return out.length ? out : localParse(text);
+  }
   async function smartParse(text) {
-    if (!sample) return localParse(text);
+    if (!sample) return isNotice(text) ? parseNotice(text) : localParse(text);
     const d = new Date();
     const prompt = `You turn a busy engineering student's quick note into planner tasks.
 Today is ${d.toLocaleDateString("en-GB", { weekday: "long" })} ${ymd(d)}. Current time ${fromMin(nowMin())}.
-Categories: "ppt" (company pre-placement talks/presentations), "test" (company tests, online assessments, interviews, college exams), "prep" (placement prep: DSA, aptitude, core subjects, resume, mock interviews), "lab" (lab work, records, experiments, viva), "life" (anything personal).
-Rules: one note can hold several tasks. If no day is mentioned, use today. Resolve words like "tomorrow", "friday", "28th" into real dates on or after today. "time" is 24h "HH:MM" only if a clock time is said ("at 4" means 16:00 unless clearly morning), else null. "mins" is a duration if given, else 60 for ppt/test, else null. Keep company and subject names in the title; keep titles short.
-Reply with only a JSON array like [{"title":"Infosys PPT","cat":"ppt","date":"2026-10-26","time":"16:00","mins":60}]
+Categories: "apply" (resume submission, registration or application deadlines), "ppt" (company pre-placement talks/presentations), "test" (company tests, online assessments, interviews, college exams), "prep" (placement prep: DSA, aptitude, core subjects, mock interviews), "lab" (lab work, records, experiments, viva), "life" (anything personal).
+The note may be a short line, or a whole placement-portal announcement pasted from WhatsApp. For an announcement, make one task per dated action (resume deadline, test, PPT, interview), titled "<Company>: <action>", and put the useful details (profiles, eligibility, venue, mode, credits, anything odd like an impossible time range) in "notes" as 1-3 short lines. Skip links and group invites.
+Rules: one note can hold several tasks. If no day is mentioned, use today. A deadline given as "EOD" is 23:59. Keep dates that have already passed as they are (do not move them to next year) so they show as overdue. Resolve words like "tomorrow", "friday", "28th" into real dates on or after today. "time" is 24h "HH:MM" only if a clock time is said ("at 4" means 16:00 unless clearly morning), else null. "mins" is a duration if given, else 60 for ppt/test, else null. Keep company and subject names in the title; keep titles short.
+Reply with only a JSON array like [{"title":"Infosys PPT","cat":"ppt","date":"2026-10-26","time":"16:00","mins":60,"notes":""}]
 
 Note: ${text}`;
     try {
       const out = await sample.json(prompt, { modelTier: "quick" });
       const arr = (Array.isArray(out) ? out : [out]).filter((x) => x && typeof x.title === "string" && x.title.trim());
-      if (!arr.length) return localParse(text);
+      if (!arr.length) return isNotice(text) ? parseNotice(text) : localParse(text);
       return arr.map((x) => ({
         title: x.title.trim().slice(0, 140),
         cat: CAT_LABEL[x.cat] ? x.cat : guessCat(x.title.toLowerCase()),
         date: /^\d{4}-\d{2}-\d{2}$/.test(x.date || "") ? x.date : today(),
         time: /^\d{2}:\d{2}$/.test(x.time || "") ? x.time : null,
         mins: Number(x.mins) > 0 ? Math.round(Number(x.mins)) : null,
+        notes: typeof x.notes === "string" ? x.notes.trim().slice(0, 500) : "",
       }));
     } catch (e) {
       if (e && e.code === "not_granted") sample = null;
-      return localParse(text);
+      return isNotice(text) ? parseNotice(text) : localParse(text);
     }
   }
 
@@ -594,10 +620,19 @@ Note: ${text}`;
       const tasks = await smartParse(text);
       for (const t of tasks) await api.addTask(t);
       $("addInput").value = "";
-      flash("Added: " + tasks.map((t) => `${t.title} (${niceDay(t.date)}${t.time ? " " + t.time : ""})`).join(", ") + ". Tap Edit if anything is off.");
+      const missed = tasks.filter((t) => t.date && t.date < today());
+      flash("Added: " + tasks.map((t) => `${t.title} (${niceDay(t.date)}${t.time ? " " + t.time : ""})`).join(", ") + ". Tap Edit if anything is off." +
+        (missed.length ? ` Heads up: ${missed.map((t) => t.title).join(", ")} already passed. Check the portal now.` : ""));
+      growBox();
     } catch {
       flash("Couldn't save that. Check your connection and try again.");
     } finally { $("addBtn").disabled = false; $("addBtn").textContent = "Add"; }
+  });
+
+  const growBox = () => { const b = $("addInput"); b.style.height = "auto"; b.style.height = Math.min(b.scrollHeight + 2, 260) + "px"; };
+  $("addInput").addEventListener("input", growBox);
+  $("addInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !$("addInput").value.includes("\n")) { e.preventDefault(); $("addForm").requestSubmit(); }
   });
 
   // ---------- voice ----------
@@ -620,12 +655,12 @@ Note: ${text}`;
   function openEdit(x) {
     editing = x;
     $("eTitle").value = x.title; $("eCat").value = x.cat || "life"; $("eMins").value = x.mins || "";
-    $("eDate").value = x.date || ""; $("eTime").value = x.time || "";
+    $("eDate").value = x.date || ""; $("eTime").value = x.time || ""; $("eNotes").value = x.notes || "";
     $("editDlg").showModal();
   }
   $("editDlg").addEventListener("close", () => {
     if ($("editDlg").returnValue === "save" && editing) {
-      api.updateTask(editing.id, { title: $("eTitle").value.trim() || editing.title, cat: $("eCat").value, mins: Number($("eMins").value) || null, date: $("eDate").value || null, time: $("eTime").value || null });
+      api.updateTask(editing.id, { title: $("eTitle").value.trim() || editing.title, cat: $("eCat").value, mins: Number($("eMins").value) || null, date: $("eDate").value || null, time: $("eTime").value || null, notes: $("eNotes").value.trim() });
     }
     editing = null;
   });
