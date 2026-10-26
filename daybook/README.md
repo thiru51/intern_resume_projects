@@ -14,9 +14,13 @@ tests, placement prep, lab work) and answers one question: **what should I do ri
 - **Paste a placement notice**: copy a whole announcement from the WhatsApp group (Name, Resume Deadline,
   Test schedule, ...) and paste it in. Every deadline and test becomes its own task, with the details kept as notes.
   Deadlines that already passed are flagged.
-- **Hour-by-hour timeline** of the day, with tick boxes for routine habits.
+- **Calendar view** (Day / 3 days / Week), like Google Calendar: hours down the side, your routine,
+  fixed-time events (tests, PPTs) and a red "now" line. Deadlines show in a "Due" row at the top.
+- **Auto-planning**: deadlines and to-dos don't need a time. Daybook fits them into the free gaps of
+  your work blocks (earliest first, most urgent first), splits long jobs across gaps, and re-plans
+  every minute, so anything you didn't finish slides forward on its own.
 - **Values row** you can tick each day (stay private, hit the gym, be kind, ...).
-- **Upcoming** tab: everything grouped by day, with overdue items on top.
+- **All tasks** tab: every item with when it's planned, overdue items on top.
 - **Routine** tab: edit your daily blocks and values.
 
 ## How it runs

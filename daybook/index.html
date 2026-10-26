@@ -4,32 +4,38 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: one phone-first column. Sticky tab bar, a "now / next" card up top,
-   then the day as a time-ordered timeline. Saffron marks "now" and actions. */
+/* Layout: one column. A "now / next" card, then a calendar grid (hours down the
+   side, days across) where routine, fixed events and auto-planned work sit at their real times.
+   Saffron marks "now" and actions; each task type has its own color. */
 :root {
-  --bg: #f4f5f8; --surface: #ffffff; --ink: #1b1f2e; --muted: #5f6679; --line: #dde0e8;
+  --bg: #f4f5f8; --surface: #ffffff; --ink: #1b1f2e; --muted: #5f6679; --line: #dde0e8; --line-soft: #eceef3;
   --accent: #c8610a; --accent-ink: #ffffff; --accent-soft: #fbecdc;
+  --routine: #eef0f5; --band: #f7f3ec;
   --c-ppt: #2f5fcc; --c-test: #bf3445; --c-prep: #6f45c8; --c-lab: #0f7d72; --c-life: #5d6577; --c-apply: #a05a00;
-  --good: #1d8a4e;
+  --good: #1d8a4e; --nowline: #d93a3a;
+  --hour: 52px;
   --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d;
+  --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d; --line-soft: #222532;
   --accent: #f0943a; --accent-ink: #1a1206; --accent-soft: #35240f;
+  --routine: #242836; --band: #231f19;
   --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd; --c-apply: #e8b45a;
-  --good: #58c98a; color-scheme: dark } }
+  --good: #58c98a; --nowline: #ff6b6b; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d;
+  --bg: #10121a; --surface: #1a1d28; --ink: #e8eaf2; --muted: #9ba2b6; --line: #2b2f3d; --line-soft: #222532;
   --accent: #f0943a; --accent-ink: #1a1206; --accent-soft: #35240f;
+  --routine: #242836; --band: #231f19;
   --c-ppt: #7ea2f2; --c-test: #f07f8c; --c-prep: #b49af0; --c-lab: #5cc9bb; --c-life: #a3abbd; --c-apply: #e8b45a;
-  --good: #58c98a; color-scheme: dark }
+  --good: #58c98a; --nowline: #ff6b6b; color-scheme: dark }
 
 * { box-sizing: border-box }
+[hidden] { display: none !important }
 body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--f-body); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
-.wrap { max-width: 720px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 48px; display: grid; gap: 18px }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 48px; display: grid; gap: 16px }
 h1, h2 { font-family: var(--f-display); text-wrap: balance; margin: 0 }
 h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1 }
 h2 { font-size: 1.1rem; font-weight: 600 }
@@ -38,55 +44,96 @@ h2 { font-size: 1.1rem; font-weight: 600 }
 button, input, select, textarea { font: inherit; color: inherit }
 button { cursor: pointer }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
-
-header.top { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap }
 .sync { font-size: .8rem; color: var(--muted) }
 
-nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 6px; display: flex; gap: 4px }
+header.top { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap }
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--bg); padding-block: 6px; display: flex; gap: 4px }
 nav.tabs button { flex: 1; border: 1px solid var(--line); background: var(--surface); padding: 9px 6px; border-radius: 10px; font-weight: 700; color: var(--muted) }
 nav.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
 
 /* Quick add */
-form.add { display: flex; gap: 8px }
+form.add { display: flex; gap: 8px; align-items: flex-end }
 form.add textarea { flex: 1; min-width: 0; min-height: 46px; max-height: 260px; resize: none; overflow-y: auto; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 11px 14px; line-height: 1.4 }
-form.add { align-items: flex-end }
 .btn { border: 0; border-radius: 12px; padding: 0 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); min-height: 46px }
 .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line) }
 .btn.small { min-height: 34px; padding: 0 12px; border-radius: 9px; font-size: .9rem }
+.btn:disabled { opacity: .6 }
 .mic { width: 46px; padding: 0; display: grid; place-items: center }
 .mic.on { background: var(--c-test); color: #fff }
-.hint { font-size: .85rem; color: var(--muted); margin: -10px 0 0 }
-.flash { font-size: .9rem; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); margin: -6px 0 0 }
+.hint { font-size: .85rem; color: var(--muted); margin: -8px 0 0 }
+.flash { font-size: .9rem; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); margin: -4px 0 0; display: flex; gap: 10px; align-items: start; justify-content: space-between }
+.flash button { flex: none }
 
 /* Now / next */
-.now { background: var(--ink); color: var(--bg); border-radius: 16px; padding: 16px 18px; display: grid; gap: 10px }
+.now { background: var(--ink); color: var(--bg); border-radius: 16px; padding: 14px 18px; display: grid; gap: 8px }
 .now .eyebrow { color: inherit; opacity: .7 }
-.now .big { font-family: var(--f-display); font-size: 1.35rem; font-weight: 800; line-height: 1.2 }
-.now .focus { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 8px 12px; font-weight: 700 }
+.now .big { font-family: var(--f-display); font-size: 1.3rem; font-weight: 800; line-height: 1.2 }
+.now .focus { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 7px 12px; font-weight: 700 }
 .now .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .95rem }
 
-/* Values + habits */
+/* Calendar toolbar */
+.calbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap }
+.calbar .nav { display: flex; gap: 6px; align-items: center }
+.calbar h2 { min-width: 0 }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface) }
+.seg button { border: 0; background: none; padding: 7px 12px; font-weight: 700; color: var(--muted); font-size: .9rem }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg) }
+.sq { width: 36px; height: 36px; padding: 0; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 1.1rem; line-height: 1 }
+
+/* Calendar grid */
+.cal { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden }
+.cal-scroll { max-height: 70vh; overflow-y: auto; overscroll-behavior: contain; position: relative }
+.cal-row { display: grid; grid-template-columns: 46px repeat(var(--days), minmax(0, 1fr)) }
+.cal-head { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
+.dh { padding: 6px 2px 4px; text-align: center; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; min-width: 0 }
+.dh b { display: grid; place-items: center; margin: 2px auto 0; width: 2em; height: 2em; border-radius: 999px; font-family: var(--f-display); font-size: 1.15rem; color: var(--ink); letter-spacing: 0 }
+.dh.today { color: var(--accent) }
+.dh.today b { background: var(--accent); color: var(--accent-ink) }
+.allday { border-bottom: 1px solid var(--line); background: var(--surface) }
+.allday .lab { font-size: .62rem; color: var(--muted); padding: 4px 4px 0 0; text-align: right; text-transform: uppercase; letter-spacing: .04em }
+.allday .cell { border-left: 1px solid var(--line-soft); padding: 3px 2px; display: grid; gap: 2px; align-content: start; min-height: 24px; min-width: 0 }
+.chip-ev { --cat: var(--c-life); display: block; width: 100%; text-align: left; border: 0; border-radius: 5px; padding: 1px 5px; font-size: .72rem; line-height: 1.35; background: color-mix(in srgb, var(--cat) 20%, var(--surface)); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--cat) }
+.chip-ev.overdue { background: color-mix(in srgb, var(--c-test) 22%, var(--surface)) }
+.chip-ev.done { opacity: .5; text-decoration: line-through }
+.cal-body { position: relative }
+.hours { position: relative }
+.hours span { position: absolute; right: 6px; transform: translateY(-50%); font-size: .68rem; color: var(--muted) }
+.col { position: relative; border-left: 1px solid var(--line-soft); background-image: repeating-linear-gradient(to bottom, var(--line-soft) 0 1px, transparent 1px var(--hour)); min-width: 0 }
+.col.today { background-color: color-mix(in srgb, var(--accent) 4%, transparent) }
+.band { position: absolute; left: 0; right: 0; background: var(--band); border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
+.band span { position: absolute; right: 4px; bottom: 2px; font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; overflow: hidden; max-width: calc(100% - 8px); text-overflow: ellipsis }
+.ev { --cat: var(--c-life); position: absolute; border: 0; border-radius: 6px; padding: 2px 5px; font-size: .74rem; line-height: 1.25; text-align: left; overflow: hidden; display: block; color: var(--ink); z-index: 2 }
+.ev .tt { display: block; font-weight: 700; overflow-wrap: anywhere }
+.ev.tiny .tt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .7rem }
+.ev .tm { display: block; font-family: var(--f-mono); font-size: .66rem; color: var(--muted) }
+.ev.routine { background: var(--routine); color: var(--muted); z-index: 1 }
+.ev.routine .tt { font-weight: 400 }
+.ev.routine.did { opacity: .55 }
+.ev.routine.did .tt::before { content: "✓ "; color: var(--good); font-weight: 700 }
+.ev.task { background: color-mix(in srgb, var(--cat) 20%, var(--surface)); border-left: 3px solid var(--cat) }
+.ev.task.fixed { background: var(--cat); color: var(--surface); border-left-color: var(--cat) }
+.ev.task.fixed .tm { color: inherit; opacity: .85 }
+.ev.task.planned { border: 1px dashed var(--cat); border-left: 3px solid var(--cat) }
+.ev.task.late { box-shadow: inset 0 0 0 1px var(--c-test) }
+.ev.done { opacity: .45; text-decoration: line-through }
+.nowline { position: absolute; left: 0; right: 0; height: 2px; background: var(--nowline); z-index: 4; pointer-events: none }
+.nowline::before { content: ""; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--nowline) }
+[data-cat="ppt"] { --cat: var(--c-ppt) } [data-cat="test"] { --cat: var(--c-test) } [data-cat="prep"] { --cat: var(--c-prep) } [data-cat="lab"] { --cat: var(--c-lab) } [data-cat="life"] { --cat: var(--c-life) } [data-cat="apply"] { --cat: var(--c-apply) }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--muted) }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--cat); margin-right: 5px; vertical-align: -1px }
+.legend i.dash { background: none; border: 1px dashed var(--muted) }
+.legend i.fill { background: var(--muted) }
+.unplaced { font-size: .88rem; color: var(--c-test) }
+
+/* Values */
+.section { display: grid; gap: 10px }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
 .chips { display: flex; flex-wrap: wrap; gap: 6px }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .9rem }
 .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink) }
 .chip[aria-pressed="true"]::before { content: "✓ "; color: var(--accent); font-weight: 700 }
 
-/* Timeline */
-.section { display: grid; gap: 10px }
-.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
-ol.line { list-style: none; margin: 0; padding: 0; display: grid; border-left: 2px solid var(--line); margin-left: 52px }
-ol.line li { position: relative; padding: 8px 0 8px 14px; display: flex; gap: 10px; align-items: start; min-width: 0 }
-ol.line li .t { position: absolute; left: -62px; top: 10px; width: 50px; text-align: right; font-size: .8rem; color: var(--muted) }
-ol.line li::before { content: ""; position: absolute; left: -6px; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line) }
-ol.line li.is-now::before { background: var(--accent); border-color: var(--accent) }
-ol.line li.is-now .what { font-weight: 700 }
-ol.line li.past .what { color: var(--muted) }
-ol.line li.task::before { border-radius: 3px; border-color: var(--cat) }
-.what { flex: 1; min-width: 0 }
-.what small { display: block; color: var(--muted); font-size: .85rem }
-.dur { font-size: .8rem; color: var(--muted) }
-
-/* Tasks */
+/* Task list (Upcoming) */
 ul.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
 ul.tasks li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; min-width: 0 }
 ul.tasks li.done .title { text-decoration: line-through; color: var(--muted) }
@@ -94,31 +141,31 @@ ul.tasks li.done .title { text-decoration: line-through; color: var(--muted) }
 .title small { display: block; color: var(--muted); font-size: .82rem }
 .title .note { display: block; color: var(--muted); font-size: .82rem; white-space: pre-line; margin-top: 2px }
 .cat { --cat: var(--c-life); display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cat); border: 1px solid var(--cat); border-radius: 6px; padding: 1px 6px; margin-right: 6px; vertical-align: 1px }
-[data-cat="ppt"] { --cat: var(--c-ppt) } [data-cat="test"] { --cat: var(--c-test) } [data-cat="prep"] { --cat: var(--c-prep) } [data-cat="lab"] { --cat: var(--c-lab) } [data-cat="life"] { --cat: var(--c-life) } [data-cat="apply"] { --cat: var(--c-apply) }
-.check { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0; color: var(--accent-ink) }
+.check { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; padding: 0 }
 .check[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff }
 .check[aria-pressed="true"]::after { content: "✓"; font-size: .85rem; font-weight: 700 }
 .icon-btn { border: 0; background: none; color: var(--muted); padding: 4px 6px; border-radius: 8px; font-size: .9rem }
 .icon-btn:hover { background: var(--bg) }
 .overdue { color: var(--c-test); font-weight: 700 }
-.empty { color: var(--muted); font-size: .95rem; padding: 14px; border: 1px dashed var(--line); border-radius: 12px }
+.empty { color: var(--muted); font-size: .95rem; padding: 14px; border: 1px dashed var(--line); border-radius: 12px; margin: 0 }
 
 /* Routine editor */
 .rows { display: grid; gap: 8px }
 .rrow { display: grid; grid-template-columns: 110px 1fr 74px 96px 34px; gap: 6px; align-items: center }
 .rrow input, .rrow select, #valuesText, dialog input, dialog select, dialog textarea { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 8px; min-width: 0; width: 100% }
-@media (max-width: 560px) { .rrow { grid-template-columns: 96px 1fr 34px; } .rrow .m, .rrow .k { grid-column: span 1 } .rrow .k { grid-column: 2 / span 2 } }
-#valuesText, #eNotes { min-height: 170px; resize: vertical }
-#eNotes { min-height: 90px }
+@media (max-width: 560px) { .rrow { grid-template-columns: 96px 1fr 34px } .rrow .k { grid-column: 2 / span 2 } }
+#valuesText { min-height: 170px; resize: vertical }
+#eNotes { min-height: 80px; resize: vertical }
 .bar { display: flex; gap: 8px; flex-wrap: wrap }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px }
 .card p { margin: 0 }
 
-dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); width: min(440px, calc(100% - 32px)); padding: 18px }
+dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); width: min(460px, calc(100% - 32px)); padding: 18px }
 dialog::backdrop { background: rgb(0 0 0 / .45) }
 dialog form { display: grid; gap: 10px }
 dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); font-weight: 700 }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+@media (max-width: 520px) { .now .big { font-size: 1.15rem } .seg button { padding: 7px 9px } }
 @media (prefers-reduced-motion: no-preference) { .flash { animation: pop .25s ease-out } @keyframes pop { from { transform: translateY(-4px); opacity: .4 } } }
 </style>
 
@@ -132,23 +179,23 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
   </header>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" id="tab-today" aria-selected="true" data-view="today">Today</button>
-    <button role="tab" id="tab-upcoming" aria-selected="false" data-view="upcoming">Upcoming</button>
+    <button role="tab" id="tab-today" aria-selected="true" data-view="today">Calendar</button>
+    <button role="tab" id="tab-upcoming" aria-selected="false" data-view="upcoming">All tasks</button>
     <button role="tab" id="tab-routine" aria-selected="false" data-view="routine">Routine</button>
   </nav>
 
   <form class="add" id="addForm" autocomplete="off">
-    <textarea id="addInput" rows="1" placeholder="e.g. Infosys PPT tomorrow 4pm, or paste a placement notice" aria-label="Add a task in plain words, or paste an announcement"></textarea>
+    <textarea id="addInput" rows="1" placeholder="Paste a message or type a task" aria-label="Add to calendar: paste a message or type a task"></textarea>
     <button type="button" class="btn ghost mic" id="micBtn" aria-label="Speak a task">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none"/></svg>
     </button>
     <button class="btn" id="addBtn">Add</button>
   </form>
-  <p class="hint" id="hint">Type or speak naturally, like "DBMS test Friday 10am". You can also paste a whole placement notice from WhatsApp and it pulls out every deadline and test.</p>
-  <div class="flash" id="flash" hidden></div>
+  <p class="hint" id="hint">Paste WhatsApp messages as they are, or type “Infosys PPT tomorrow 4pm”. Deadlines and prep get fitted into your free work hours.</p>
+  <div class="flash" id="flash" hidden><span id="flashText"></span><button class="btn ghost small" id="undoBtn" type="button" hidden>Undo</button></div>
 
-  <!-- TODAY -->
-  <section id="view-today" class="section" style="gap:18px">
+  <!-- CALENDAR -->
+  <section id="view-today" class="section" style="gap:14px">
     <div class="now" id="nowCard">
       <div class="eyebrow">Right now</div>
       <div class="big" id="nowWhat">Loading your day…</div>
@@ -156,23 +203,40 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
       <div class="row"><span id="nowNext"></span><span class="mono" id="nowLeft"></span></div>
     </div>
 
+    <div class="calbar">
+      <div class="nav">
+        <button class="sq" id="prevBtn" type="button" aria-label="Previous">‹</button>
+        <button class="btn ghost small" id="todayBtn" type="button">Today</button>
+        <button class="sq" id="nextBtn" type="button" aria-label="Next">›</button>
+        <h2 id="rangeLabel"></h2>
+      </div>
+      <div class="seg" role="group" aria-label="How many days to show">
+        <button type="button" data-days="1" id="d1">Day</button>
+        <button type="button" data-days="3" id="d3">3 days</button>
+        <button type="button" data-days="7" id="d7">Week</button>
+      </div>
+    </div>
+
+    <div class="cal">
+      <div class="cal-scroll" id="calScroll">
+        <div class="cal-head" id="calHead"></div>
+        <div class="cal-row cal-body" id="calBody"></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="fill"></i>Fixed time (tests, PPTs)</span>
+      <span><i class="dash"></i>Auto-planned work</span>
+      <span data-cat="test"><i></i>Test</span><span data-cat="ppt"><i></i>PPT</span><span data-cat="apply"><i></i>Apply</span><span data-cat="prep"><i></i>Prep</span><span data-cat="lab"><i></i>Lab</span><span data-cat="life"><i></i>Life</span>
+    </div>
+    <p class="unplaced" id="unplaced" hidden></p>
+
     <div class="section">
       <div class="section-head"><h2>Values I live by</h2><span class="sync" id="valCount"></span></div>
       <div class="chips" id="values"></div>
     </div>
-
-    <div class="section">
-      <div class="section-head"><h2>To do today</h2><span class="sync" id="todoCount"></span></div>
-      <ul class="tasks" id="todayTasks"></ul>
-    </div>
-
-    <div class="section">
-      <div class="section-head"><h2>The day, hour by hour</h2><span class="sync" id="habitCount"></span></div>
-      <ol class="line" id="timeline"></ol>
-    </div>
   </section>
 
-  <!-- UPCOMING -->
+  <!-- ALL TASKS -->
   <section id="view-upcoming" class="section" hidden style="gap:18px">
     <div id="upcoming" class="section" style="gap:18px"></div>
   </section>
@@ -181,7 +245,7 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
   <section id="view-routine" class="section" hidden style="gap:18px">
     <div class="card">
       <h2>Daily routine</h2>
-      <p class="sync">Blocks marked <b>work</b> are where tasks get suggested. Times are your usual day; change them anytime.</p>
+      <p class="sync">Blocks marked <b>work</b> are your free work hours. Deadlines and prep tasks get planned into them automatically.</p>
       <div class="rows" id="routineRows"></div>
       <div class="bar">
         <button class="btn ghost small" id="addBlock" type="button">Add block</button>
@@ -190,7 +254,7 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
     </div>
     <div class="card">
       <h2>Values</h2>
-      <p class="sync">One per line. They show on the Today tab so you can tick the ones you lived.</p>
+      <p class="sync">One per line. They show on the Calendar tab so you can tick the ones you lived.</p>
       <textarea id="valuesText" aria-label="Values, one per line"></textarea>
       <div class="bar"><button class="btn small" id="saveValues" type="button">Save values</button></div>
     </div>
@@ -199,26 +263,36 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
 
 <dialog id="editDlg">
   <form method="dialog" id="editForm">
-    <h2>Edit task</h2>
-    <label>Task<input id="eTitle" required></label>
+    <h2>Edit</h2>
+    <label>What<input id="eTitle" required></label>
+    <label>How it's scheduled
+      <select id="eKind">
+        <option value="event">Fixed time (test, PPT, class)</option>
+        <option value="deadline">Deadline (plan work before it)</option>
+        <option value="task">To do on this day (auto-planned)</option>
+      </select>
+    </label>
     <div class="two">
       <label>Type
         <select id="eCat">
-          <option value="ppt">PPT</option><option value="test">Test</option><option value="prep">Prep</option><option value="apply">Apply</option><option value="lab">Lab</option><option value="life">Life</option>
+          <option value="test">Test</option><option value="ppt">PPT</option><option value="apply">Apply</option><option value="prep">Prep</option><option value="lab">Lab</option><option value="life">Life</option>
         </select>
       </label>
       <label>Minutes<input id="eMins" type="number" min="5" step="5"></label>
     </div>
     <div class="two">
-      <label>Day<input id="eDate" type="date"></label>
-      <label>Time<input id="eTime" type="time"></label>
+      <label id="eDateLab">Day<input id="eDate" type="date"></label>
+      <label id="eTimeLab">Time<input id="eTime" type="time"></label>
     </div>
     <label>Notes<textarea id="eNotes"></textarea></label>
     <div class="bar" style="justify-content:space-between">
-      <button class="btn ghost small" value="delete" id="eDelete" type="button">Delete</button>
+      <span class="bar">
+        <button class="btn ghost small" id="eDelete" type="button">Delete</button>
+        <button class="btn ghost small" id="eDone" type="button">Mark done</button>
+      </span>
       <span class="bar">
         <button class="btn ghost small" value="cancel" formnovalidate>Cancel</button>
-        <button class="btn small" value="save" id="eSave">Save</button>
+        <button class="btn small" value="save">Save</button>
       </span>
     </div>
   </form>
@@ -244,30 +318,33 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
   const DEFAULT_VALUES = ["Stay private", "Hit the gym", "Dress well", "Learn to fight", "Talk to God", "Chase goals", "Be kind", "Stay humble", "Live life", "Be happy"];
   const CAT_ORDER = { apply: 0, test: 1, ppt: 2, lab: 3, prep: 4, life: 5 };
   const CAT_LABEL = { apply: "Apply", ppt: "PPT", test: "Test", prep: "Prep", lab: "Lab", life: "Life" };
+  const DEFAULT_MINS = { apply: 30, ppt: 60, test: 120, prep: 60, lab: 60, life: 30 };
+  const KIND_LABEL = { event: "Fixed time", deadline: "Deadline", task: "To do" };
 
   // ---------- small helpers ----------
   const $ = (id) => document.getElementById(id);
   const pad = (n) => String(n).padStart(2, "0");
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const parseYmd = (s) => new Date(s + "T00:00");
   const toMin = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
   const fromMin = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
   const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
   const fmtDur = (m) => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? " " + (m % 60) + "m" : ""}` : `${m}m`;
+  const today = () => ymd(new Date());
   const niceDay = (s) => {
     if (!s) return "No date";
-    const t = ymd(new Date());
-    if (s === t) return "Today";
+    if (s === today()) return "Today";
     if (s === ymd(addDays(new Date(), 1))) return "Tomorrow";
     if (s === ymd(addDays(new Date(), -1))) return "Yesterday";
-    const d = new Date(s + "T00:00");
-    return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+    return parseYmd(s).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
   };
   const el = (tag, props = {}, ...kids) => {
     const n = document.createElement(tag);
     for (const [k, v] of Object.entries(props)) {
       if (k === "class") n.className = v;
       else if (k === "text") n.textContent = v;
+      else if (k === "style") n.setAttribute("style", v);
       else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
       else if (v !== undefined && v !== null && v !== false) n.setAttribute(k, v);
     }
@@ -276,24 +353,26 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
   };
 
   // ---------- state ----------
-  const state = { tasks: [], routine: null, values: null, day: {}, view: "today" };
-  const today = () => ymd(new Date());
+  const state = { tasks: [], routine: null, values: null, day: {}, view: "today", days: window.innerWidth < 640 ? 1 : 7, anchor: today() };
   const routine = () => (state.routine && state.routine.length ? state.routine : DEFAULT_ROUTINE);
   const values = () => (state.values && state.values.length ? state.values : DEFAULT_VALUES);
+  // Older tasks have no "kind": a clock time means a fixed event, except resume-type deadlines.
+  const kindOf = (x) => x.kind || (x.cat === "apply" ? "deadline" : x.time ? "event" : "task");
+  const minsOf = (x) => Number(x.mins) > 0 ? Number(x.mins) : DEFAULT_MINS[x.cat] || 60;
 
   // ---------- storage: synced db when available, this-device storage otherwise ----------
   let db = null, sample = null;
   const LS = "daybook-v1";
+  let localDays = {};
   const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch { return {}; } };
   const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify({ tasks: state.tasks, routine: state.routine, values: state.values, days: localDays })); } catch {} };
-  let localDays = {};
   const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
   const api = {
     async addTask(t) {
       t = { done: false, createdAt: new Date().toISOString(), ...t };
-      if (db) return db.collection("tasks").add(t);
-      state.tasks.push({ id: uid(), ...t }); saveLocal(); render();
+      if (db) return (await db.collection("tasks").add(t)).id;
+      const id = uid(); state.tasks.push({ id, ...t }); saveLocal(); render(); return id;
     },
     async updateTask(id, patch) {
       if (db) return db.doc("tasks/" + id).update(patch);
@@ -348,173 +427,281 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
     subscribeDay();
   }
 
-  // ---------- planning logic ----------
-  function rankTasks(list) {
-    const t = today();
-    return [...list].sort((a, b) => {
-      const ad = a.date || "9999", bd = b.date || "9999";
-      if (ad !== bd) return ad < bd ? -1 : 1;
-      if ((a.time || "99") !== (b.time || "99")) return (a.time || "99") < (b.time || "99") ? -1 : 1;
-      return (CAT_ORDER[a.cat] ?? 9) - (CAT_ORDER[b.cat] ?? 9);
-    }).map((x) => ({ ...x, overdue: x.date && x.date < t }));
+  // ---------- the planner: puts flexible work into free work hours ----------
+  // Fixed events keep their time. Deadlines get work time as early as possible (from now).
+  // "To do" tasks go on their own day (or from now, if that day has passed). Long jobs split across gaps.
+  function buildPlan(horizonDays) {
+    const t = today(), n = nowMin(), base = parseYmd(t);
+    const fixed = state.tasks.filter((x) => kindOf(x) === "event" && x.time && x.date);
+    const free = {}; // date -> [[start, end], ...]
+    for (let i = 0; i < horizonDays; i++) {
+      const d = ymd(addDays(base, i));
+      let gaps = routine().filter((b) => b.kind === "work").map((b) => [toMin(b.start), toMin(b.start) + (Number(b.mins) || 0)]);
+      for (const f of fixed.filter((f) => f.date === d)) {
+        const fs = toMin(f.time), fe = fs + minsOf(f);
+        gaps = gaps.flatMap(([s, e]) => (fe <= s || fs >= e) ? [[s, e]] : [[s, fs], [fe, e]].filter(([a, b]) => b - a >= 15));
+      }
+      if (i === 0) { const from = Math.ceil(n / 15) * 15; gaps = gaps.map(([s, e]) => [Math.max(s, from), e]).filter(([s, e]) => e - s >= 15); }
+      free[d] = gaps.sort((a, b) => a[0] - b[0]);
+    }
+    const flex = state.tasks.filter((x) => !x.done && kindOf(x) !== "event")
+      .sort((a, b) => {
+        const ka = (a.date || "9999") + (kindOf(a) === "deadline" ? a.time || "23:59" : "99"), kb = (b.date || "9999") + (kindOf(b) === "deadline" ? b.time || "23:59" : "99");
+        return ka < kb ? -1 : ka > kb ? 1 : (CAT_ORDER[a.cat] ?? 9) - (CAT_ORDER[b.cat] ?? 9);
+      });
+    const chunks = {}, firstSlot = {}, unplaced = [];
+    for (const x of flex) {
+      let left = minsOf(x), part = 0;
+      const startDay = kindOf(x) === "task" && x.date && x.date > t ? x.date : t;
+      const dueKey = x.date ? x.date + " " + (x.time || "23:59") : null;
+      for (const d of Object.keys(free)) {
+        if (d < startDay || left <= 0) continue;
+        for (const g of free[d]) {
+          if (left <= 0) break;
+          const len = g[1] - g[0];
+          if (len < Math.min(30, left)) continue;
+          const take = Math.min(len, left);
+          const c = { task: x, date: d, start: g[0], mins: take, part: ++part, late: dueKey ? d + " " + fromMin(g[0] + take) > dueKey : false };
+          (chunks[d] = chunks[d] || []).push(c);
+          if (!firstSlot[x.id]) firstSlot[x.id] = c;
+          g[0] += take; left -= take;
+        }
+        free[d] = free[d].filter(([s, e]) => e - s >= 15);
+      }
+      if (left > 0) unplaced.push(x);
+    }
+    return { chunks, firstSlot, unplaced };
   }
-  // What to work on in a work block: overdue first, then today's untimed tasks, then the nearest deadline.
-  function focusTask() {
-    const t = today();
-    const open = state.tasks.filter((x) => !x.done && (!x.time || x.date !== t));
-    const ranked = rankTasks(open);
-    return ranked.find((x) => x.date && x.date <= t) || ranked.find((x) => x.date) || ranked[0] || null;
+  let plan = { chunks: {}, firstSlot: {}, unplaced: [] };
+
+  // Everything that sits on one day's grid.
+  function dayItems(d) {
+    const isToday = d === today();
+    const did = isToday ? state.day.blocks || {} : {};
+    const bands = [], items = [];
+    for (const b of routine()) {
+      const s = toMin(b.start), e = s + (Number(b.mins) || 30);
+      if (b.kind === "work") bands.push({ start: s, end: e, label: b.label });
+      else items.push({ type: "routine", start: s, end: e, label: b.label, block: b, did: !!did[b.id] });
+    }
+    for (const x of state.tasks) if (kindOf(x) === "event" && x.time && x.date === d) items.push({ type: "fixed", start: toMin(x.time), end: toMin(x.time) + minsOf(x), label: x.title, task: x });
+    for (const c of plan.chunks[d] || []) items.push({ type: "planned", start: c.start, end: c.start + c.mins, label: c.task.title, task: c.task, chunk: c });
+    return { bands, items };
   }
-  function timelineItems() {
+  function allDayItems(d) {
     const t = today();
-    const items = routine().map((b) => ({ type: "block", start: toMin(b.start), mins: Number(b.mins) || 30, ...b }));
-    for (const x of state.tasks) if (x.date === t && x.time) items.push({ type: "task", start: toMin(x.time), mins: Number(x.mins) || 60, task: x, label: x.title });
-    return items.sort((a, b) => a.start - b.start || (a.type === "task" ? -1 : 1));
+    return state.tasks.filter((x) => x.date === d && (kindOf(x) === "deadline" || (kindOf(x) === "event" && !x.time)))
+      .map((x) => ({ task: x, overdue: !x.done && kindOf(x) === "deadline" && (d < t || (d === t && x.time && toMin(x.time) < nowMin())) }));
   }
-  function nowAndNext() {
-    const n = nowMin(), items = timelineItems();
-    // A timed task wins over the routine block it sits inside.
-    const current = items.filter((i) => n >= i.start && n < i.start + i.mins).sort((a, b) => (a.type === "task" ? -1 : 1) - (b.type === "task" ? -1 : 1))[0];
-    const next = items.find((i) => i.start > n && i !== current);
-    return { current, next, n };
+  // Side-by-side columns for overlapping items, like Google Calendar.
+  function layoutLanes(items) {
+    items.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+    let cluster = [], end = -1;
+    const flush = () => {
+      const lanes = [];
+      for (const it of cluster) {
+        let i = lanes.findIndex((e) => e <= it.start);
+        if (i < 0) { i = lanes.length; lanes.push(0); }
+        lanes[i] = it.end; it.lane = i;
+      }
+      for (const it of cluster) it.lanes = lanes.length;
+      cluster = [];
+    };
+    for (const it of items) { if (cluster.length && it.start >= end) flush(); cluster.push(it); end = Math.max(cluster.length === 1 ? it.end : end, it.end); }
+    if (cluster.length) flush();
+    return items;
   }
 
-  // ---------- rendering ----------
-  function taskRow(x, { showDay = false } = {}) {
-    const meta = [];
-    if (showDay || x.overdue) meta.push(x.overdue ? "Overdue · " + niceDay(x.date) : niceDay(x.date));
-    if (x.time) meta.push(x.time);
-    if (x.mins) meta.push(fmtDur(Number(x.mins)));
-    return el("li", { class: x.done ? "done" : "" },
-      el("button", { class: "check", "aria-pressed": String(!!x.done), "aria-label": (x.done ? "Mark not done: " : "Mark done: ") + x.title, onclick: () => api.updateTask(x.id, { done: !x.done }) }),
-      el("div", { class: "title" },
-        el("span", { class: "cat", "data-cat": x.cat || "life", text: CAT_LABEL[x.cat] || "Life" }),
-        x.title,
-        meta.length ? el("small", { class: x.overdue && !x.done ? "overdue" : "", text: meta.join(" · ") }) : null,
-        x.notes ? el("span", { class: "note", text: x.notes }) : null),
-      el("button", { class: "icon-btn", "aria-label": "Edit " + x.title, text: "Edit", onclick: () => openEdit(x) })
-    );
+  // ---------- calendar rendering ----------
+  function viewDates() {
+    let start = parseYmd(state.anchor);
+    if (state.days === 7) start = addDays(start, -((start.getDay() + 6) % 7)); // weeks start Monday
+    return Array.from({ length: state.days }, (_, i) => ymd(addDays(start, i)));
+  }
+  let scrolledOnce = false;
+  function renderCalendar() {
+    const dates = viewDates(), t = today(), n = nowMin();
+    const HOUR = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hour")) || 52;
+    const firstStart = Math.min(...routine().map((b) => toMin(b.start)), ...state.tasks.filter((x) => x.time && dates.includes(x.date)).map((x) => toMin(x.time)), 6 * 60);
+    const H0 = Math.max(0, Math.floor(firstStart / 60)), H1 = 24;
+    const y = (m) => ((m - H0 * 60) / 60) * HOUR;
+
+    const first = parseYmd(dates[0]), last = parseYmd(dates[dates.length - 1]);
+    $("rangeLabel").textContent = state.days === 1 ? first.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" })
+      : first.getMonth() === last.getMonth() ? `${first.getDate()}–${last.getDate()} ${first.toLocaleDateString(undefined, { month: "short" })}`
+      : `${first.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${last.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
+    for (const k of [1, 3, 7]) $("d" + k).setAttribute("aria-pressed", String(state.days === k));
+
+    const scroll = $("calScroll");
+    scroll.style.setProperty("--days", dates.length);
+
+    // Head: day names, then an all-day row for deadlines and untimed events.
+    const head = $("calHead"); head.replaceChildren();
+    const names = el("div", { class: "cal-row" }, el("div"));
+    for (const d of dates) {
+      const dd = parseYmd(d);
+      names.append(el("div", { class: "dh" + (d === t ? " today" : "") }, dd.toLocaleDateString(undefined, { weekday: "short" }), el("b", { text: dd.getDate() })));
+    }
+    const allday = el("div", { class: "cal-row allday" }, el("div", { class: "lab", text: "Due" }));
+    for (const d of dates) {
+      const cell = el("div", { class: "cell" });
+      for (const a of allDayItems(d)) {
+        const x = a.task, label = (kindOf(x) === "deadline" ? "Due " + (x.time && x.time !== "23:59" ? x.time + " " : "") : "") + x.title;
+        cell.append(el("button", { class: "chip-ev" + (a.overdue ? " overdue" : "") + (x.done ? " done" : ""), "data-cat": x.cat || "life", title: label, text: label, onclick: () => openEdit(x) }));
+      }
+      allday.append(cell);
+    }
+    head.append(names, allday);
+
+    // Body: hour labels + one column per day.
+    const body = $("calBody"); body.replaceChildren();
+    const totalH = (H1 - H0) * HOUR;
+    const hours = el("div", { class: "hours", style: `height:${totalH}px` });
+    for (let h = H0 + 1; h < H1; h++) hours.append(el("span", { class: "mono", style: `top:${(h - H0) * HOUR}px`, text: pad(h) + ":00" }));
+    body.append(hours);
+    for (const d of dates) {
+      const col = el("div", { class: "col" + (d === t ? " today" : ""), style: `height:${totalH}px` });
+      const { bands, items } = dayItems(d);
+      for (const b of bands) col.append(el("div", { class: "band", style: `top:${y(b.start)}px;height:${y(b.end) - y(b.start)}px` }, el("span", { text: b.label })));
+      for (const it of layoutLanes(items)) {
+        const top = y(it.start), h = Math.max(18, y(it.end) - y(it.start) - 2);
+        const w = 100 / it.lanes, left = it.lane * w;
+        const style = `top:${top + 1}px;height:${h}px;left:calc(${left}% + 2px);width:calc(${w}% - 4px)`;
+        const time = `${fromMin(it.start)}–${fromMin(it.end)}`;
+        if (it.type === "routine") {
+          const node = el("button", { class: "ev routine" + (it.did ? " did" : "") + (h < 34 ? " tiny" : ""), style, title: `${it.label} ${time}`, "aria-label": `${it.label}, ${time}${d === t ? (it.did ? ", done. Tap to undo" : ". Tap to mark done") : ""}` },
+            el("span", { class: "tt", text: it.label }), h > 34 ? el("span", { class: "tm", text: time }) : null);
+          if (d === t) node.addEventListener("click", () => api.saveDay({ ...state.day, blocks: { ...(state.day.blocks || {}), [it.block.id]: !it.did } }));
+          else node.disabled = true;
+          col.append(node);
+        } else {
+          const x = it.task, k = it.type === "fixed" ? "fixed" : "planned";
+          const label = (it.type === "planned" && kindOf(x) === "deadline" ? "Work on: " : "") + x.title + (it.chunk && it.chunk.part > 1 ? ` (part ${it.chunk.part})` : "");
+          col.append(el("button", { class: `ev task ${k}` + (h < 34 ? " tiny" : "") + (x.done ? " done" : "") + (it.chunk && it.chunk.late ? " late" : ""), "data-cat": x.cat || "life", style, title: `${label} ${time}`, onclick: () => openEdit(x) },
+            el("span", { class: "tt", text: label }), h > 30 ? el("span", { class: "tm", text: time + (it.chunk && it.chunk.late ? " · after deadline" : it.type === "planned" ? " · auto" : "") }) : null));
+        }
+      }
+      if (d === t && n >= H0 * 60) col.append(el("div", { class: "nowline", style: `top:${y(n)}px` }));
+      body.append(col);
+    }
+
+    if (!scrolledOnce && state.view === "today") {
+      scrolledOnce = true;
+      requestAnimationFrame(() => { scroll.scrollTop = Math.max(0, y(n) - HOUR * 1.5); });
+    }
+
+    const un = plan.unplaced.filter((x) => !x.done);
+    $("unplaced").hidden = !un.length;
+    $("unplaced").textContent = un.length ? `No free work time left in the next weeks for: ${un.map((x) => x.title).join(", ")}. Free up a work block or shorten them.` : "";
   }
 
-  function renderToday() {
-    const t = today(), n = nowMin();
-    const d = new Date();
+  function renderNow() {
+    const t = today(), n = nowMin(), d = new Date();
     $("dateLine").textContent = d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
     const h = d.getHours();
     $("greet").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-
-    // Now / next
-    const { current, next } = nowAndNext();
-    const focus = focusTask();
-    if (current) {
-      $("nowWhat").textContent = current.label;
-      $("nowLeft").textContent = `${fmtDur(current.start + current.mins - n)} left`;
+    const { bands, items } = dayItems(t);
+    const covering = (list) => list.filter((i) => n >= i.start && n < i.end);
+    const rank = { planned: 0, fixed: 0, routine: 1 };
+    const cur = covering(items).sort((a, b) => rank[a.type] - rank[b.type])[0];
+    const band = covering(bands)[0];
+    const upcoming = items.filter((i) => i.start > n && !(i.task && i.task.done)).sort((a, b) => a.start - b.start);
+    const nextWork = upcoming.find((i) => i.type !== "routine");
+    $("nowFocus").hidden = true;
+    if (cur && cur.type !== "routine") {
+      $("nowWhat").textContent = (cur.type === "planned" ? "Work on: " : "") + cur.label;
+      $("nowLeft").textContent = `${fmtDur(cur.end - n)} left`;
+    } else if (cur) {
+      $("nowWhat").textContent = cur.label;
+      $("nowLeft").textContent = `${fmtDur(cur.end - n)} left`;
+    } else if (band) {
+      $("nowWhat").textContent = "Free work time";
+      $("nowLeft").textContent = `till ${fromMin(band.end)}`;
+      $("nowFocus").hidden = false;
+      $("nowFocus").textContent = "Nothing planned. Good time for placement prep: DSA, aptitude or core subjects.";
     } else {
-      $("nowWhat").textContent = n < toMin(routine()[0]?.start || "06:00") ? "Rest. Your day hasn't started yet." : "Free time. Pick something below or rest.";
+      $("nowWhat").textContent = n < toMin(routine()[0]?.start || "06:00") ? "Rest. Your day hasn't started yet." : "Free time. Rest or relax.";
       $("nowLeft").textContent = "";
     }
-    const inWork = current && current.type === "block" && current.kind === "work";
-    $("nowFocus").hidden = !(inWork || (!current && focus));
-    if (focus) $("nowFocus").textContent = "Work on: " + focus.title + (focus.date ? " (" + (focus.date < t ? "overdue" : "due " + niceDay(focus.date).toLowerCase()) + ")" : "");
-    else $("nowFocus").textContent = "Nothing pending. Add a task above, or do placement prep.";
-    if (inWork) $("nowFocus").hidden = false;
-    $("nowNext").textContent = next ? `Next: ${next.label} at ${fromMin(next.start)}` : "Nothing else scheduled today";
+    if (nextWork && (!cur || cur.type === "routine")) { $("nowFocus").hidden = false; $("nowFocus").textContent = `Next work: ${nextWork.label} at ${fromMin(nextWork.start)}`; }
+    const next = $("nowFocus").hidden ? upcoming[0] : upcoming.find((i) => i.type === "routine") || null;
+    $("nowNext").textContent = next ? `Next: ${next.label} at ${fromMin(next.start)}` : "Nothing else today";
 
-    // Values
     const lived = state.day.values || {};
     const vbox = $("values"); vbox.replaceChildren();
     for (const v of values()) vbox.append(el("button", { class: "chip", "aria-pressed": String(!!lived[v]), text: v,
       onclick: () => api.saveDay({ ...state.day, values: { ...lived, [v]: !lived[v] } }) }));
     $("valCount").textContent = `${values().filter((v) => lived[v]).length}/${values().length} today`;
-
-    // To do today: overdue + today's tasks without a time
-    const list = rankTasks(state.tasks.filter((x) => (x.date && x.date < t && !x.done) || (x.date === t && !x.time)));
-    const ul = $("todayTasks"); ul.replaceChildren();
-    if (!list.length) ul.append(el("li", { class: "empty", text: "Nothing on the list for today. Add one above, like “Revise OS notes today”." }));
-    for (const x of list) ul.append(taskRow(x));
-    $("todoCount").textContent = list.length ? `${list.filter((x) => x.done).length}/${list.length} done` : "";
-
-    // Timeline
-    const doneBlocks = state.day.blocks || {};
-    const ol = $("timeline"); ol.replaceChildren();
-    const { current: cur } = nowAndNext();
-    let habits = 0, habitsDone = 0;
-    for (const i of timelineItems()) {
-      const past = n >= i.start + i.mins;
-      const li = el("li", { class: [i.type === "task" ? "task" : "", i === cur ? "is-now" : "", past ? "past" : ""].join(" ").trim() });
-      li.append(el("span", { class: "t mono", text: fromMin(i.start) }));
-      if (i.type === "task") {
-        li.setAttribute("data-cat", i.task.cat || "life");
-        li.append(el("button", { class: "check", "aria-pressed": String(!!i.task.done), "aria-label": "Mark done: " + i.task.title, onclick: () => api.updateTask(i.task.id, { done: !i.task.done }) }));
-        li.append(el("div", { class: "what" }, el("span", { class: "cat", "data-cat": i.task.cat || "life", text: CAT_LABEL[i.task.cat] || "Life" }), i.task.title, el("small", { text: fmtDur(i.mins) })));
-        li.append(el("button", { class: "icon-btn", text: "Edit", "aria-label": "Edit " + i.task.title, onclick: () => openEdit(i.task) }));
-      } else {
-        const tickable = i.kind !== "work";
-        if (tickable) { habits++; if (doneBlocks[i.id]) habitsDone++; }
-        li.append(tickable
-          ? el("button", { class: "check", "aria-pressed": String(!!doneBlocks[i.id]), "aria-label": "Did it: " + i.label, onclick: () => api.saveDay({ ...state.day, blocks: { ...doneBlocks, [i.id]: !doneBlocks[i.id] } }) })
-          : el("span", { class: "check", style: "border-style:dashed", "aria-hidden": "true" }));
-        const sub = i.kind === "work" && focus && !past ? "Suggested: " + focus.title : null;
-        li.append(el("div", { class: "what" }, i.label, sub ? el("small", { text: sub }) : null));
-        li.append(el("span", { class: "dur mono", text: fmtDur(i.mins) }));
-      }
-      ol.append(li);
-    }
-    $("habitCount").textContent = `${habitsDone}/${habits} routine done`;
   }
 
+  // ---------- all tasks list ----------
+  function taskRow(x) {
+    const t = today(), k = kindOf(x), meta = [KIND_LABEL[k]];
+    if (k === "event") meta.push(niceDay(x.date) + (x.time ? " " + x.time : " (all day)"));
+    if (k === "deadline") meta.push("due " + niceDay(x.date) + (x.time ? " " + x.time : ""));
+    if (k === "task") meta.push(niceDay(x.date));
+    const slot = plan.firstSlot[x.id];
+    if (slot && !x.done) meta.push(`planned ${niceDay(slot.date)} ${fromMin(slot.start)}`);
+    meta.push(fmtDur(minsOf(x)));
+    const overdue = !x.done && x.date && x.date < t && k !== "task";
+    return el("li", { class: x.done ? "done" : "" },
+      el("button", { class: "check", "aria-pressed": String(!!x.done), "aria-label": (x.done ? "Mark not done: " : "Mark done: ") + x.title, onclick: () => api.updateTask(x.id, { done: !x.done }) }),
+      el("div", { class: "title" },
+        el("span", { class: "cat", "data-cat": x.cat || "life", text: CAT_LABEL[x.cat] || "Life" }), x.title,
+        el("small", { class: overdue ? "overdue" : "", text: (overdue ? "Overdue · " : "") + meta.join(" · ") }),
+        x.notes ? el("span", { class: "note", text: x.notes }) : null),
+      el("button", { class: "icon-btn", "aria-label": "Edit " + x.title, text: "Edit", onclick: () => openEdit(x) }));
+  }
   function renderUpcoming() {
     const t = today(), box = $("upcoming"); box.replaceChildren();
-    const open = rankTasks(state.tasks.filter((x) => !(x.done && x.date && x.date < t)));
-    const groups = new Map();
-    for (const x of open) {
-      const key = x.overdue ? "overdue" : x.date || "someday";
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(x);
-    }
-    if (!groups.size) { box.append(el("p", { class: "empty", text: "No tasks yet. Add PPTs, tests and lab deadlines above and they'll line up here by day." })); return; }
-    const order = [...groups.keys()].sort((a, b) => (a === "overdue" ? -1 : b === "overdue" ? 1 : a === "someday" ? 1 : b === "someday" ? -1 : a < b ? -1 : 1));
-    for (const k of order) {
-      const items = groups.get(k);
-      const title = k === "overdue" ? "Overdue" : k === "someday" ? "No date yet" : niceDay(k);
-      const sec = el("div", { class: "section" }, el("div", { class: "section-head" }, el("h2", { text: title }), el("span", { class: "sync", text: k.length === 10 ? k.split("-").reverse().join("/") : "" })));
+    const open = state.tasks.filter((x) => !x.done || (x.date && x.date >= t));
+    if (!open.length) { box.append(el("p", { class: "empty", text: "Nothing yet. Paste a placement message or type a task above, and it will show up here and on the calendar." })); return; }
+    const groups = new Map([["overdue", []], ["active", []], ["done", []]]);
+    for (const x of open) groups.get(x.done ? "done" : x.date && x.date < t && kindOf(x) !== "task" ? "overdue" : "active").push(x);
+    const titles = { overdue: "Overdue", active: "Coming up", done: "Done" };
+    const sortKey = (x) => (x.date || "9999") + (x.time || "99");
+    for (const [k, list] of groups) {
+      if (!list.length) continue;
       const ul = el("ul", { class: "tasks" });
-      for (const x of items) ul.append(taskRow(x, { showDay: k === "overdue" }));
-      sec.append(ul); box.append(sec);
+      for (const x of list.sort((a, b) => sortKey(a) < sortKey(b) ? -1 : 1)) ul.append(taskRow(x));
+      box.append(el("div", { class: "section" }, el("div", { class: "section-head" }, el("h2", { text: titles[k] }), el("span", { class: "sync", text: String(list.length) })), ul));
     }
   }
 
+  // ---------- routine editor ----------
   let routineDraft = null;
   function renderRoutine(force) {
     if (force || !routineDraft) routineDraft = routine().map((b) => ({ ...b }));
     const box = $("routineRows"); box.replaceChildren();
     routineDraft.forEach((b, i) => {
       const set = (k) => (e) => { routineDraft[i][k] = k === "mins" ? Number(e.target.value) : e.target.value; };
+      const sel = el("select", { class: "k", "aria-label": "Kind", id: "rk-" + i, onchange: set("kind") });
+      for (const k of ["habit", "work", "meal", "break"]) sel.append(el("option", { value: k, text: k, selected: b.kind === k ? "" : null }));
       box.append(el("div", { class: "rrow" },
         el("input", { type: "time", value: b.start, "aria-label": "Start time", id: "rs-" + i, onchange: set("start") }),
         el("input", { value: b.label, "aria-label": "Block name", id: "rl-" + i, oninput: set("label") }),
         el("input", { class: "m", type: "number", min: "5", step: "5", value: b.mins, "aria-label": "Minutes", id: "rm-" + i, oninput: set("mins") }),
-        (() => { const s = el("select", { class: "k", "aria-label": "Kind", id: "rk-" + i, onchange: set("kind") });
-          for (const k of ["habit", "work", "meal", "break"]) s.append(el("option", { value: k, text: k, selected: b.kind === k ? "" : null }));
-          return s; })(),
-        el("button", { class: "icon-btn", type: "button", text: "✕", "aria-label": "Remove " + b.label, onclick: () => { routineDraft.splice(i, 1); renderRoutine(); } })
-      ));
+        sel,
+        el("button", { class: "icon-btn", type: "button", text: "✕", "aria-label": "Remove " + b.label, onclick: () => { routineDraft.splice(i, 1); renderRoutine(); } })));
     });
     if (document.activeElement !== $("valuesText")) $("valuesText").value = values().join("\n");
   }
 
   function render() {
     if (db) subscribeDay();
+    const horizon = Math.min(90, Math.max(21, Math.round((parseYmd(viewDates().slice(-1)[0]) - parseYmd(today())) / 864e5) + 2));
+    plan = buildPlan(horizon);
     for (const v of ["today", "upcoming", "routine"]) {
       $("view-" + v).hidden = state.view !== v;
       $("tab-" + v).setAttribute("aria-selected", String(state.view === v));
     }
-    renderToday();
+    renderNow();
+    renderCalendar();
     renderUpcoming();
     if (state.view !== "routine" || !routineDraft) renderRoutine(true);
   }
 
-  // ---------- understanding what you type or say ----------
+  // ---------- reading what you type, say or paste ----------
   const WD = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
   const MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
   function guessCat(s) {
@@ -522,7 +709,7 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
     if (/\b(ppt|ppts|pre[- ]?placement|presentation|talk)\b/.test(s)) return "ppt";
     if (/\b(test|exam|assessment|oa|quiz|interview round|coding round|hackerrank)\b/.test(s)) return "test";
     if (/\b(lab|experiment|record|observation|viva)\b/.test(s)) return "lab";
-    if (/\b(dsa|leetcode|aptitude|prep|revise|revision|mock|resume|interview|dp|graphs|os|dbms|cn|oops|sql)\b/.test(s)) return "prep";
+    if (/\b(dsa|leetcode|aptitude|prep|revise|revision|mock|interview|dp|graphs|os|dbms|cn|oops|sql)\b/.test(s)) return "prep";
     return "life";
   }
   function localParse(text, { keepPast = false } = {}) {
@@ -537,7 +724,8 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
                  s.match(/\b(on |by |due )?(\d{1,2})(st|nd|rd|th)\b/);
       if (!date && dm) {
         const day = Number(dm[2]); const m = dm[4] ? MON.indexOf(dm[4]) : base.getMonth();
-        let d = new Date(base.getFullYear(), m, day); if (!keepPast && d < new Date(base.getFullYear(), base.getMonth(), base.getDate())) d = dm[4] ? new Date(base.getFullYear() + 1, m, day) : new Date(base.getFullYear(), m + 1, day);
+        let d = new Date(base.getFullYear(), m, day);
+        if (!keepPast && d < new Date(base.getFullYear(), base.getMonth(), base.getDate())) d = dm[4] ? new Date(base.getFullYear() + 1, m, day) : new Date(base.getFullYear(), m + 1, day);
         date = ymd(d); strip(dm[0]);
       }
       const wd = s.match(/\b(next |this |on )?(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(day|nesday|sday|urday)?\b/);
@@ -545,7 +733,7 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
         const idx = WD.findIndex((w) => w.startsWith(wd[2].slice(0, 3)));
         let diff = (idx - base.getDay() + 7) % 7; if (diff === 0 || wd[1] === "next ") diff = diff || 7;
         date = ymd(addDays(base, diff)); strip(wd[0]);
-      }
+      } else if (wd) strip(wd[0]);
       const tm = s.match(/\b(at |@ ?)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)\b/) || s.match(/\b(at |@ ?)(\d{1,2})(?:[:.](\d{2}))?\b/) || s.match(/\b()(\d{1,2})[:.](\d{2})\b/);
       if (tm) {
         let hh = Number(tm[2]); const mm = Number(tm[3] || 0);
@@ -555,12 +743,15 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
       }
       const du = s.match(/\bfor (\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minutes)\b/);
       if (du) { mins = Math.round(Number(du[1]) * (du[2].startsWith("h") ? 60 : 1)); strip(du[0]); }
+      const isDue = /\b(due|by|deadline|submit|submission|before)\b/.test(" " + raw.toLowerCase() + " ");
       const title = s.replace(/\b(on|at|by|due|in the)\s*$/g, "").replace(/\s+/g, " ").trim().replace(/^(remind me to|i have|i've got|add|to)\s+/, "");
-      const pretty = title ? title.charAt(0).toUpperCase() + title.slice(1) : raw;
-      return { title: pretty.replace(/\b(ppt|dbms|os|cn|dsa|oops|sql|dp)\b/gi, (w) => w.toUpperCase()), cat: guessCat(" " + raw.toLowerCase() + " "), date: date || ymd(base), time, mins };
+      const pretty = (title ? title.charAt(0).toUpperCase() + title.slice(1) : raw).replace(/\b(ppt|dbms|os|cn|dsa|oops|sql|dp)\b/gi, (w) => w.toUpperCase());
+      const cat = guessCat(" " + raw.toLowerCase() + " ");
+      const kind = isDue || cat === "apply" ? "deadline" : time ? "event" : "task";
+      return { title: pretty, cat, kind, date: date || ymd(base), time, mins, notes: "" };
     });
   }
-  // Placement-portal notices come as "Key: value" lines. Without AI, turn each dated line into a task.
+  // Placement-portal notices come as "Key: value" lines. Without AI, turn each dated line into an item.
   const isNotice = (text) => /^\s*(name|company)\s*:/im.test(text) || (text.match(/^[^\n:]{2,40}:/gm) || []).length >= 3;
   function parseNotice(text) {
     const kv = {};
@@ -569,32 +760,48 @@ dialog label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); 
     const details = ["profile", "role", "eligibility", "venue", "ctc", "stipend", "note"].filter((k) => kv[k]).map((k) => `${k[0].toUpperCase() + k.slice(1)}: ${kv[k]}`).join("\n");
     const out = [];
     for (const [k, v] of Object.entries(kv)) {
-      if (!/deadline|test|ppt|interview|schedule|assessment|round|talk/.test(k)) continue;
+      if (!/deadline|test|ppt|interview|schedule|assessment|round|talk/.test(k) || !/\d/.test(v)) continue;
       const [p] = localParse(v, { keepPast: true });
-      if (!p || p.date === today() && !/today|tonight/i.test(v) && !/\d/.test(v)) continue;
       const cat = /deadline|resume|register/.test(k) ? "apply" : /ppt|talk/.test(k) ? "ppt" : "test";
+      const kind = cat === "apply" ? "deadline" : "event";
       const label = cat === "apply" ? "submit resume" : k.replace(/schedule/, "").trim();
-      out.push({ title: `${company}: ${label}`, cat, date: p.date, time: p.time || (/eod|end of day/i.test(v) ? "23:59" : null), mins: cat === "apply" ? 30 : 120, notes: [v, details].filter(Boolean).join("\n") });
+      out.push({ title: `${company}: ${label}`, cat, kind, date: p.date, time: p.time || (/eod|end of day/i.test(v) ? "23:59" : null), mins: cat === "apply" ? 30 : 120, notes: [v, details].filter(Boolean).join("\n") });
     }
     return out.length ? out : localParse(text);
   }
-  async function smartParse(text) {
-    if (!sample) return isNotice(text) ? parseNotice(text) : localParse(text);
-    const d = new Date();
-    const prompt = `You turn a busy engineering student's quick note into planner tasks.
-Today is ${d.toLocaleDateString("en-GB", { weekday: "long" })} ${ymd(d)}. Current time ${fromMin(nowMin())}.
-Categories: "apply" (resume submission, registration or application deadlines), "ppt" (company pre-placement talks/presentations), "test" (company tests, online assessments, interviews, college exams), "prep" (placement prep: DSA, aptitude, core subjects, mock interviews), "lab" (lab work, records, experiments, viva), "life" (anything personal).
-The note may be a short line, or a whole placement-portal announcement pasted from WhatsApp. For an announcement, make one task per dated action (resume deadline, test, PPT, interview), titled "<Company>: <action>", and put the useful details (profiles, eligibility, venue, mode, credits, anything odd like an impossible time range) in "notes" as 1-3 short lines. Skip links and group invites.
-Rules: one note can hold several tasks. If no day is mentioned, use today. A deadline given as "EOD" is 23:59. Keep dates that have already passed as they are (do not move them to next year) so they show as overdue. Resolve words like "tomorrow", "friday", "28th" into real dates on or after today. "time" is 24h "HH:MM" only if a clock time is said ("at 4" means 16:00 unless clearly morning), else null. "mins" is a duration if given, else 60 for ppt/test, else null. Keep company and subject names in the title; keep titles short.
-Reply with only a JSON array like [{"title":"Infosys PPT","cat":"ppt","date":"2026-10-26","time":"16:00","mins":60,"notes":""}]
+  const fallbackParse = (text) => isNotice(text) ? parseNotice(text) : localParse(text);
 
-Note: ${text}`;
+  async function smartParse(text) {
+    if (!sample) return fallbackParse(text);
+    const d = new Date();
+    const prompt = `You are the scheduling assistant inside Daybook, the calendar of an engineering student in campus placement season.
+Now: ${d.toLocaleDateString("en-GB", { weekday: "long" })} ${ymd(d)}, ${fromMin(nowMin())}.
+
+The student pastes anything: a quick note, a voice-typed sentence, or a raw message copied from a WhatsApp group (placement-portal announcements, class or lab updates, plans with friends). Pull out every item that belongs on THIS student's calendar. Ignore greetings, links, group invites, emojis, sign-offs and anything that needs no action.
+
+For each item give:
+- "title": short. Start with the company or subject when there is one, e.g. "Commotion: online test", "DBMS lab record".
+- "kind": "event" if it happens at a set time or on a set day (tests, PPTs, interviews, classes, meetups); "deadline" if something must be submitted or finished BY a time (resume deadlines, registrations, forms, record submissions); "task" if it is work with no fixed time (revise, prepare, practise, buy, call).
+- "cat": "apply" (resume, registration, application), "ppt" (pre-placement talks), "test" (tests, online assessments, interviews, exams), "prep" (placement prep: DSA, aptitude, core subjects, mock interviews), "lab" (lab work, records, experiments, viva), "life" (personal).
+- "date": "YYYY-MM-DD". Work out weekday names, "tomorrow", "28th" from now. Keep dates that already passed in the past (never jump to next year). A task with no day means today.
+- "time": 24h "HH:MM": the start time of an event, or the due time of a deadline ("EOD" = "23:59"); null if none is given. If a time is odd (like "10pm-12pm"), pick the most likely reading and say so in notes.
+- "mins": how long. From a time range if given. Otherwise: tests 120, PPTs 60, interviews 60; for a deadline, the work needed to finish it (resume submission 30, lab record 90); for a task, a sensible estimate.
+- "notes": up to 3 short lines worth remembering: profile or role, eligibility, venue, mode (online/offline), anything to confirm. "" if nothing.
+When a message announces a test or interview, also add one "task" the day before titled "Prep: <company> <test>" with cat "prep" and mins 120.
+
+Reply with only a JSON array, or [] if nothing in the message needs a calendar entry. Example:
+[{"title":"Infosys: PPT","kind":"event","cat":"ppt","date":"2026-10-27","time":"16:00","mins":60,"notes":"Online, link on portal"}]
+
+Message:
+"""
+${text}
+"""`;
     try {
-      const out = await sample.json(prompt, { modelTier: "quick" });
+      const out = await sample.json(prompt, { modelTier: text.length > 160 ? "default" : "quick" });
       const arr = (Array.isArray(out) ? out : [out]).filter((x) => x && typeof x.title === "string" && x.title.trim());
-      if (!arr.length) return isNotice(text) ? parseNotice(text) : localParse(text);
       return arr.map((x) => ({
         title: x.title.trim().slice(0, 140),
+        kind: KIND_LABEL[x.kind] ? x.kind : x.time ? "event" : "task",
         cat: CAT_LABEL[x.cat] ? x.cat : guessCat(x.title.toLowerCase()),
         date: /^\d{4}-\d{2}-\d{2}$/.test(x.date || "") ? x.date : today(),
         time: /^\d{2}:\d{2}$/.test(x.time || "") ? x.time : null,
@@ -603,36 +810,46 @@ Note: ${text}`;
       }));
     } catch (e) {
       if (e && e.code === "not_granted") sample = null;
-      return isNotice(text) ? parseNotice(text) : localParse(text);
+      return fallbackParse(text);
     }
   }
 
-  function flash(msg) {
-    const f = $("flash"); f.textContent = msg; f.hidden = false;
-    clearTimeout(flash.t); flash.t = setTimeout(() => { f.hidden = true; }, 6000);
+  let lastAdded = [];
+  function flash(msg, undoable = false) {
+    $("flashText").textContent = msg; $("flash").hidden = false; $("undoBtn").hidden = !undoable;
+    clearTimeout(flash.t); flash.t = setTimeout(() => { $("flash").hidden = true; }, undoable ? 15000 : 7000);
   }
-
-  $("addForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = $("addInput").value.trim(); if (!text) return;
-    $("addBtn").disabled = true; $("addBtn").textContent = "Adding…";
-    try {
-      const tasks = await smartParse(text);
-      for (const t of tasks) await api.addTask(t);
-      $("addInput").value = "";
-      const missed = tasks.filter((t) => t.date && t.date < today());
-      flash("Added: " + tasks.map((t) => `${t.title} (${niceDay(t.date)}${t.time ? " " + t.time : ""})`).join(", ") + ". Tap Edit if anything is off." +
-        (missed.length ? ` Heads up: ${missed.map((t) => t.title).join(", ")} already passed. Check the portal now.` : ""));
-      growBox();
-    } catch {
-      flash("Couldn't save that. Check your connection and try again.");
-    } finally { $("addBtn").disabled = false; $("addBtn").textContent = "Add"; }
+  $("undoBtn").addEventListener("click", async () => {
+    for (const id of lastAdded) await api.deleteTask(id).catch(() => {});
+    flash(`Removed ${lastAdded.length} item${lastAdded.length === 1 ? "" : "s"}.`); lastAdded = [];
   });
 
   const growBox = () => { const b = $("addInput"); b.style.height = "auto"; b.style.height = Math.min(b.scrollHeight + 2, 260) + "px"; };
   $("addInput").addEventListener("input", growBox);
   $("addInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !$("addInput").value.includes("\n")) { e.preventDefault(); $("addForm").requestSubmit(); }
+  });
+
+  $("addForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = $("addInput").value.trim(); if (!text) return;
+    $("addBtn").disabled = true; $("addBtn").textContent = "Reading…";
+    try {
+      const items = await smartParse(text);
+      if (!items.length) { flash("Couldn't find anything to schedule in that message. Add a day or time, or type it as a task."); return; }
+      lastAdded = [];
+      for (const t of items) lastAdded.push(await api.addTask(t));
+      $("addInput").value = ""; growBox();
+      const missed = items.filter((t) => t.kind !== "task" && t.date && t.date < today());
+      const desc = (t) => `${t.title} (${t.kind === "deadline" ? "due " : ""}${niceDay(t.date)}${t.time ? " " + t.time : ""})`;
+      flash(`Added ${items.length}: ${items.map(desc).join(", ")}.` + (missed.length ? ` Heads up: ${missed.map((t) => t.title).join(", ")} already passed. Check the portal now.` : ""), true);
+      // Jump the calendar to the first new item so you can see where it landed.
+      const firstDate = items.map((t) => t.date).filter(Boolean).sort().find((d) => d >= today());
+      if (firstDate && !viewDates().includes(firstDate)) state.anchor = firstDate;
+      state.view = "today"; render();
+    } catch {
+      flash("Couldn't save that. Check your connection and try again.");
+    } finally { $("addBtn").disabled = false; $("addBtn").textContent = "Add"; }
   });
 
   // ---------- voice ----------
@@ -652,25 +869,42 @@ Note: ${text}`;
 
   // ---------- edit dialog ----------
   let editing = null;
+  const syncKindLabels = () => {
+    const k = $("eKind").value;
+    $("eDateLab").firstChild.textContent = k === "deadline" ? "Due day" : "Day";
+    $("eTimeLab").firstChild.textContent = k === "deadline" ? "Due time" : k === "event" ? "Time (empty = all day)" : "Time (not needed)";
+  };
+  $("eKind").addEventListener("change", syncKindLabels);
   function openEdit(x) {
     editing = x;
-    $("eTitle").value = x.title; $("eCat").value = x.cat || "life"; $("eMins").value = x.mins || "";
+    $("eTitle").value = x.title; $("eKind").value = kindOf(x); $("eCat").value = x.cat || "life"; $("eMins").value = x.mins || "";
     $("eDate").value = x.date || ""; $("eTime").value = x.time || ""; $("eNotes").value = x.notes || "";
+    $("eDone").textContent = x.done ? "Mark not done" : "Mark done";
+    syncKindLabels();
     $("editDlg").showModal();
   }
   $("editDlg").addEventListener("close", () => {
     if ($("editDlg").returnValue === "save" && editing) {
-      api.updateTask(editing.id, { title: $("eTitle").value.trim() || editing.title, cat: $("eCat").value, mins: Number($("eMins").value) || null, date: $("eDate").value || null, time: $("eTime").value || null, notes: $("eNotes").value.trim() });
+      api.updateTask(editing.id, { title: $("eTitle").value.trim() || editing.title, kind: $("eKind").value, cat: $("eCat").value, mins: Number($("eMins").value) || null,
+        date: $("eDate").value || null, time: $("eTime").value || null, notes: $("eNotes").value.trim() });
     }
     editing = null;
   });
   $("eDelete").addEventListener("click", () => { if (editing) api.deleteTask(editing.id); $("editDlg").close("delete"); });
+  $("eDone").addEventListener("click", () => { if (editing) api.updateTask(editing.id, { done: !editing.done }); $("editDlg").close("done"); });
 
-  // ---------- tabs + routine editor ----------
+  // ---------- tabs, calendar navigation, routine editor ----------
   document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => {
     state.view = b.dataset.view; if (state.view === "routine") renderRoutine(true); render();
     try { localStorage.setItem("daybook-tab", state.view); } catch {}
   }));
+  document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+    state.days = Number(b.dataset.days); render();
+    try { localStorage.setItem("daybook-days", String(state.days)); } catch {}
+  }));
+  $("prevBtn").addEventListener("click", () => { state.anchor = ymd(addDays(parseYmd(state.anchor), -state.days)); render(); });
+  $("nextBtn").addEventListener("click", () => { state.anchor = ymd(addDays(parseYmd(state.anchor), state.days)); render(); });
+  $("todayBtn").addEventListener("click", () => { state.anchor = today(); scrolledOnce = false; render(); });
   $("addBlock").addEventListener("click", () => { routineDraft.push({ id: uid(), label: "New block", start: "12:00", mins: 30, kind: "habit" }); renderRoutine(); });
   $("saveRoutine").addEventListener("click", async () => {
     const clean = routineDraft.filter((b) => b.label && b.start).map((b) => ({ id: b.id || uid(), label: b.label.trim(), start: b.start, mins: Number(b.mins) || 30, kind: b.kind || "habit" })).sort((a, b) => toMin(a.start) - toMin(b.start));
@@ -681,9 +915,12 @@ Note: ${text}`;
     try { await api.saveValues(list); flash("Values saved."); } catch { flash("Couldn't save your values. Try again."); }
   });
 
-  try { const v = localStorage.getItem("daybook-tab"); if (v === "today" || v === "upcoming" || v === "routine") state.view = v; } catch {}
+  try {
+    const v = localStorage.getItem("daybook-tab"); if (v === "today" || v === "upcoming" || v === "routine") state.view = v;
+    const dn = Number(localStorage.getItem("daybook-days")); if ([1, 3, 7].includes(dn)) state.days = dn;
+  } catch {}
   render();
   connect();
-  setInterval(render, 60 * 1000); // keep "now" fresh
+  setInterval(() => { if (!document.querySelector("dialog[open]")) render(); }, 60 * 1000); // keep "now" fresh
 })();
 </script>
