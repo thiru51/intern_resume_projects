@@ -24,12 +24,12 @@ PROFILE = {
     "short_name": "Thiru",
     "title": "Robotics Engineer",
     "headline": "Robotics engineer working on robot perception, robot learning and control",
-    "base_url": "https://thirunavukarasu-p.github.io/",
+    "base_url": "https://thiru51.github.io/thirunavukarasu-p.github.io/",
     "location": "Chennai, India",
     "school": "Indian Institute of Technology Madras",
     "degree": "B.Tech, Naval Architecture and Ocean Engineering, IIT Madras (2026)",
     "email": "",  # e.g. "you@example.com"
-    "github": "https://github.com/thirunavukarasu-p",
+    "github": "https://github.com/thiru51",
     "linkedin": "https://www.linkedin.com/in/thirunavukarasu-p/",
     "intro": (
         "I build the software that lets robots see, move and decide what to do next: "

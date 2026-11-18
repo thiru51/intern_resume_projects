@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://thirunavukarasu-p.github.io/sitemap.xml
+Sitemap: https://thiru51.github.io/thirunavukarasu-p.github.io/sitemap.xml
