@@ -30,7 +30,7 @@ PROFILE = {
     "degree": "B.Tech, Naval Architecture and Ocean Engineering, IIT Madras (2026)",
     "email": "",  # e.g. "you@example.com"
     "github": "https://github.com/thirunavukarasu-p",
-    "linkedin": "https://www.linkedin.com/in/thirunavukarasu-p-65262827a/",
+    "linkedin": "https://www.linkedin.com/in/thirunavukarasu-p/",
     "intro": (
         "I build the software that lets robots see, move and decide what to do next: "
         "perception models, learned locomotion and driving policies, state estimation and "
