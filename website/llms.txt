@@ -1,8 +1,10 @@
-# Thirunavukarasu P
+# Thirunavukarasu Palanisamy
 
 > Robotics engineer working on robot perception, robot learning and control. Based in Chennai, India. Robotics, perception, robot learning and autonomy roles.
 
 I build the software that lets robots see, move and decide what to do next: perception models, learned locomotion and driving policies, state estimation and control. I write my own implementations, test them properly, and report what actually worked, including the parts that didn't.
+
+Also known as: Thirunavukarasu P, Thiru.
 
 ## Key facts
 - Current role: Project Scientist, Department of Ocean Engineering, IIT Madras (since July 2026)

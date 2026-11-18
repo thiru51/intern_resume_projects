@@ -19,7 +19,8 @@ ROOT = Path(__file__).parent
 # PROFILE: who you are. Fill in EMAIL when you're ready; it stays hidden while empty.
 # ---------------------------------------------------------------------------------------
 PROFILE = {
-    "name": "Thirunavukarasu P",
+    "name": "Thirunavukarasu Palanisamy",
+    "other_names": ["Thirunavukarasu P", "Thiru"],
     "short_name": "Thiru",
     "title": "Robotics Engineer",
     "headline": "Robotics engineer working on robot perception, robot learning and control",
@@ -459,7 +460,7 @@ def person_ld():
         "mainEntity": {
             "@type": "Person",
             "name": PROFILE["name"],
-            "alternateName": PROFILE["short_name"],
+            "alternateName": PROFILE["other_names"],
             "jobTitle": PROFILE["title"],
             "description": PROFILE["headline"] + ". " + PROFILE["intro"],
             "url": BASE,
@@ -708,6 +709,8 @@ def build_llms_txt():
         f"> {PROFILE['headline']}. Based in {PROFILE['location']}. {PROFILE['open_to']}.",
         "",
         PROFILE["intro"],
+        "",
+        "Also known as: " + ", ".join(PROFILE["other_names"]) + ".",
         "",
         "## Key facts",
         f"- Current role: Project Scientist, Department of Ocean Engineering, IIT Madras (since July 2026)",
