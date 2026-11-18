@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two cars, one junction, no traffic lights | Thirunavukarasu P</title>
+<meta name="description" content="Multi-agent reinforcement learning with intent inference at unsignalised intersections. Two self-driving cars learn to take turns at a junction with no lights or radio, by reading each other&#x27;s motion.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/intersection-negotiation-marl.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Two cars, one junction, no traffic lights | Thirunavukarasu P">
+<meta property="og:description" content="Multi-agent reinforcement learning with intent inference at unsignalised intersections. Two self-driving cars learn to take turns at a junction with no lights or radio, by reading each other&#x27;s motion.">
+<meta property="og:url" content="https://thiru51.github.io/projects/intersection-negotiation-marl.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "Multi-agent reinforcement learning with intent inference at unsignalised intersections",
+ "alternateName": "Two cars, one junction, no traffic lights",
+ "description": "Two self-driving cars learn to take turns at a junction with no lights or radio, by reading each other's motion.",
+ "url": "https://thiru51.github.io/projects/intersection-negotiation-marl.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "Multi-agent RL, MAPPO, Bayesian filtering, PyTorch, MAPPO, Particle filters, NumPy, pytest",
+ "codeRepository": "https://github.com/thiru51/cooperative-negotiation-marl"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 02</span>
+    <h1>Two cars, one junction, no traffic lights</h1>
+    <p class="lede">Multi-agent reinforcement learning with intent inference at unsignalised intersections. Two self-driving cars learn to take turns at a junction with no lights or radio, by reading each other&#x27;s motion.</p>
+    <div class="meta"><span class="chip">Multi-agent RL</span><span class="chip">MAPPO</span><span class="chip">Bayesian filtering</span><a class="chip gold" href="https://github.com/thiru51/cooperative-negotiation-marl">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">Code complete with 63 passing tests. Latest experiment (v4) done.</p></div>
+      <div><h2>The problem</h2><p>Two cars reach a junction with no lights, no signs and no way to talk. Only one can go first. Both want to avoid a crash, but each would rather be the one that goes first.</p><p>That makes it a general-sum game: the cars agree on safety and disagree on the order. They have to negotiate through how they move.</p></div>
+      <div><h2>What I built</h2><ul><li>The junction as a general-sum Markov game where each car has three intent actions: creep, yield and go.</li><li>A particle filter in each car that estimates whether the other car is being assertive, from its motion alone.</li><li>That belief added to each car&#x27;s observation, so standard policy-gradient methods still apply.</li><li>MAPPO (multi-agent PPO) written from scratch, with a centralised critic.</li><li>Parallel environments with a check that multi-process runs reproduce single-process runs exactly.</li></ul></div>
+      <div><h2>Results</h2><ul><li>The experiment is a controlled A/B: same learner, same environment, same seeds, and one line of difference in the reward.</li><li>Training logs showed a "frozen follower" that never took its turn. Removing one reward term once the other car has cleared fixed it: <b>1.000 resolution rate and 0 collisions on all 12 seeds</b>.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">PyTorch</span><span class="chip">MAPPO</span><span class="chip">Particle filters</span><span class="chip">NumPy</span><span class="chip">pytest</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>12 / 12</b>seeds fully resolved</li><li><b>0</b>collisions</li><li><b>63</b>tests passing</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><a href="pedestrian-crossing-intent.html">&larr; Level 01: Will that pedestrian cross?</a><a href="robot-arm-demo-quality.html">Level 03: Which human demos teach a robot arm best? &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Making a robot&#x27;s eyes 3.5x faster | Thirunavukarasu P</title>
+<meta name="description" content="FP16 and INT8 TensorRT optimisation of YOLO11 for real-time road-user detection. Runs YOLO11 detection on TensorRT at three precisions and measures accuracy, speed, memory and energy for each.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/realtime-detection-tensorrt.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Making a robot&#x27;s eyes 3.5x faster | Thirunavukarasu P">
+<meta property="og:description" content="FP16 and INT8 TensorRT optimisation of YOLO11 for real-time road-user detection. Runs YOLO11 detection on TensorRT at three precisions and measures accuracy, speed, memory and energy for each.">
+<meta property="og:url" content="https://thiru51.github.io/projects/realtime-detection-tensorrt.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "FP16 and INT8 TensorRT optimisation of YOLO11 for real-time road-user detection",
+ "alternateName": "Making a robot's eyes 3.5x faster",
+ "description": "Runs YOLO11 detection on TensorRT at three precisions and measures accuracy, speed, memory and energy for each.",
+ "url": "https://thiru51.github.io/projects/realtime-detection-tensorrt.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "Perception, TensorRT, Edge deployment, TensorRT, NVIDIA ModelOpt, ONNX Runtime, PyTorch, CUDA",
+ "codeRepository": "https://github.com/thiru51/yolo11-tensorrt-quantization"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 06</span>
+    <h1>Making a robot&#x27;s eyes 3.5x faster</h1>
+    <p class="lede">FP16 and INT8 TensorRT optimisation of YOLO11 for real-time road-user detection. Runs YOLO11 detection on TensorRT at three precisions and measures accuracy, speed, memory and energy for each.</p>
+    <div class="meta"><span class="chip">Perception</span><span class="chip">TensorRT</span><span class="chip">Edge deployment</span><a class="chip gold" href="https://github.com/thiru51/yolo11-tensorrt-quantization">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">Complete.</p></div>
+      <div><h2>The problem</h2><p>A robot&#x27;s perception has to run in real time on limited hardware. Lower precision (FP16, INT8) makes models faster but can cost accuracy.</p><p>This project measures exactly how much speed you gain and how much accuracy you lose, on all 5,000 COCO validation images.</p></div>
+      <div><h2>What I built</h2><ul><li>YOLO11 n, s and m benchmarked on PyTorch, ONNX Runtime and TensorRT at FP32, FP16 and INT8.</li><li>INT8 post-training quantisation with NVIDIA ModelOpt, including a mixed version with the first and last layers kept in FP16.</li><li>Speed, GPU memory and energy per frame measured at batch size 1 on an RTX 5060 Ti.</li><li>Kernel-level profiling across 21 backend and precision configurations.</li></ul></div>
+      <div><h2>Results</h2><ul><li>TensorRT FP16 ran YOLO11m in <b>1.74 ms (574 FPS)</b> against 6.22 ms in PyTorch FP32, a 3.57x speed-up, for only 0.09 mAP lost.</li><li>Keeping the first and last layers in FP16 cut the INT8 accuracy drop from 1.93 to <b>0.63 mAP</b>, with the smallest engine (24.1 MB) and the lowest energy per frame.</li><li>Profiling showed quantise/dequantise casts took 45% of INT8 kernel time, which explains why INT8 was slower than FP16 here.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">TensorRT</span><span class="chip">NVIDIA ModelOpt</span><span class="chip">ONNX Runtime</span><span class="chip">PyTorch</span><span class="chip">CUDA</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>574 FPS</b>YOLO11m, TensorRT FP16</li><li><b>3.57x</b>faster than PyTorch FP32</li><li><b>24.1 MB</b>smallest engine</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><a href="robotic-pipe-sorting.html">&larr; Level 05: Picking pipes out of a messy pile</a><a href="traffic-world-model.html">Level 07: A car that imagines before it acts &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>

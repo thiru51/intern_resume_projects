@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rebuilding a CVPR paper from scratch | Thirunavukarasu P</title>
+<meta name="description" content="Reproduction and ablation of TITAN action priors for pedestrian trajectory forecasting. Reimplemented TITAN (CVPR 2020) from the paper alone, with every prior on its own switch so the ablation can be run row by row.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/titan-reproduction.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Rebuilding a CVPR paper from scratch | Thirunavukarasu P">
+<meta property="og:description" content="Reproduction and ablation of TITAN action priors for pedestrian trajectory forecasting. Reimplemented TITAN (CVPR 2020) from the paper alone, with every prior on its own switch so the ablation can be run row by row.">
+<meta property="og:url" content="https://thiru51.github.io/projects/titan-reproduction.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "Reproduction and ablation of TITAN action priors for pedestrian trajectory forecasting",
+ "alternateName": "Rebuilding a CVPR paper from scratch",
+ "description": "Reimplemented TITAN (CVPR 2020) from the paper alone, with every prior on its own switch so the ablation can be run row by row.",
+ "url": "https://thiru51.github.io/projects/titan-reproduction.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "Trajectory forecasting, Reproduction, PyTorch, PyTorch, 3D CNNs, GRU, pytest",
+ "codeRepository": "https://github.com/thiru51/titan-action-prior-repro"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 09</span>
+    <h1>Rebuilding a CVPR paper from scratch</h1>
+    <p class="lede">Reproduction and ablation of TITAN action priors for pedestrian trajectory forecasting. Reimplemented TITAN (CVPR 2020) from the paper alone, with every prior on its own switch so the ablation can be run row by row.</p>
+    <div class="meta"><span class="chip">Trajectory forecasting</span><span class="chip">Reproduction</span><span class="chip">PyTorch</span><a class="chip gold" href="https://github.com/thiru51/titan-action-prior-repro">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">Code complete. Full TITAN-dataset run waiting on dataset access.</p></div>
+      <div><h2>The problem</h2><p>Papers are easy to cite and hard to reproduce. TITAN predicts where pedestrians will walk using what they are doing (an action prior), and no reference code is public.</p></div>
+      <div><h2>What I built</h2><ul><li>The action-recognition branch, GRU trajectory decoder and Agent Importance Mechanism, written from the paper.</li><li>Each prior (ego motion, interaction, action) on an independent switch: seven ablation configurations.</li><li>54 tests covering the full pipeline from data loader to final displacement error.</li></ul></div>
+      <div><h2>Results</h2><ul><li>Decoder and ADE/FDE metrics validated on the public ETH/UCY benchmark, within 10% of published baselines.</li><li>In a seven-configuration ablation, the action prior was the strongest on its own (8.24 px ADE better than vanilla), and combining priors made it worse.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">PyTorch</span><span class="chip">3D CNNs</span><span class="chip">GRU</span><span class="chip">pytest</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>7</b>ablation configurations</li><li><b>&lt;10%</b>from published ETH/UCY baselines</li><li><b>54</b>tests passing</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><a href="speech-gesture-grounding.html">&larr; Level 08: &quot;Pull over there&quot; plus a pointing finger</a><a href="../index.html#levels">Back to all levels &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>

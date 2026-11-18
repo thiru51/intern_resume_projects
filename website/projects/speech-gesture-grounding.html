@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>&quot;Pull over there&quot; plus a pointing finger | Thirunavukarasu P</title>
+<meta name="description" content="In-cabin speech and gesture grounding for driver-vehicle interaction. Turns what a driver says and points at into an action, and asks a question instead of guessing when the two don&#x27;t agree.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/speech-gesture-grounding.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="&quot;Pull over there&quot; plus a pointing finger | Thirunavukarasu P">
+<meta property="og:description" content="In-cabin speech and gesture grounding for driver-vehicle interaction. Turns what a driver says and points at into an action, and asks a question instead of guessing when the two don&#x27;t agree.">
+<meta property="og:url" content="https://thiru51.github.io/projects/speech-gesture-grounding.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "In-cabin speech and gesture grounding for driver-vehicle interaction",
+ "alternateName": "\"Pull over there\" plus a pointing finger",
+ "description": "Turns what a driver says and points at into an action, and asks a question instead of guessing when the two don't agree.",
+ "url": "https://thiru51.github.io/projects/speech-gesture-grounding.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "Multimodal, Speech, Human-robot interaction, Whisper, CLIP, PyTorch, Python",
+ "codeRepository": "https://github.com/thiru51/incabin-multimodal-grounding"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 08</span>
+    <h1>&quot;Pull over there&quot; plus a pointing finger</h1>
+    <p class="lede">In-cabin speech and gesture grounding for driver-vehicle interaction. Turns what a driver says and points at into an action, and asks a question instead of guessing when the two don&#x27;t agree.</p>
+    <div class="meta"><span class="chip">Multimodal</span><span class="chip">Speech</span><span class="chip">Human-robot interaction</span><a class="chip gold" href="https://github.com/thiru51/incabin-multimodal-grounding">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">Complete. Small test set (16 cases), reported as such.</p></div>
+      <div><h2>The problem</h2><p>A driver says &quot;pull over there&quot; and points. &quot;There&quot; means nothing alone, and neither does the gesture. Only together do they pick out a spot.</p><p>A wrong clarifying question is cheap. A wrong manoeuvre is not. So the system must know when it isn&#x27;t sure.</p></div>
+      <div><h2>What I built</h2><ul><li>Speech transcription with Whisper and open-vocabulary matching against the camera view with CLIP.</li><li>Speech and pointing fused as a product of experts, so any disagreement spreads out the belief and triggers a question.</li><li>Three possible outcomes: act, ask a specific clarifying question, or reject.</li></ul></div>
+      <div><h2>Results</h2><ul><li>Allowed to ask, the system was right in every case and never silently did the wrong thing.</li><li>Forced to act without asking, <b>37.5%</b> of its actions were silently wrong. Asking brought that to <b>0%</b>.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">Whisper</span><span class="chip">CLIP</span><span class="chip">PyTorch</span><span class="chip">Python</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>0%</b>silent errors when allowed to ask</li><li><b>37.5%</b>silent errors when forced</li><li><b>3</b>outcomes: act, ask, reject</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><a href="traffic-world-model.html">&larr; Level 07: A car that imagines before it acts</a><a href="titan-reproduction.html">Level 09: Rebuilding a CVPR paper from scratch &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>

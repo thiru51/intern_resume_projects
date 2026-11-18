@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Will that pedestrian cross? | Thirunavukarasu P</title>
+<meta name="description" content="Pedestrian crossing-intent prediction from pose, gesture and scene context. Predicts whether a pedestrian will step onto the road 1.5 seconds before they do, using body pose and the scene around them.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/pedestrian-crossing-intent.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Will that pedestrian cross? | Thirunavukarasu P">
+<meta property="og:description" content="Pedestrian crossing-intent prediction from pose, gesture and scene context. Predicts whether a pedestrian will step onto the road 1.5 seconds before they do, using body pose and the scene around them.">
+<meta property="og:url" content="https://thiru51.github.io/projects/pedestrian-crossing-intent.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "Pedestrian crossing-intent prediction from pose, gesture and scene context",
+ "alternateName": "Will that pedestrian cross?",
+ "description": "Predicts whether a pedestrian will step onto the road 1.5 seconds before they do, using body pose and the scene around them.",
+ "url": "https://thiru51.github.io/projects/pedestrian-crossing-intent.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "Perception, Transformers, CARLA, PyTorch, MediaPipe, CARLA 0.9.16, ONNX, OpenCV, pytest",
+ "codeRepository": "https://github.com/thiru51/pedestrian-intent-forecast"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 01</span>
+    <h1>Will that pedestrian cross?</h1>
+    <p class="lede">Pedestrian crossing-intent prediction from pose, gesture and scene context. Predicts whether a pedestrian will step onto the road 1.5 seconds before they do, using body pose and the scene around them.</p>
+    <div class="meta"><span class="chip">Perception</span><span class="chip">Transformers</span><span class="chip">CARLA</span><a class="chip gold" href="https://github.com/thiru51/pedestrian-intent-forecast">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">Complete on JAAD real-world video. PIE evaluation is next.</p></div>
+      <div><h2>The problem</h2><p>Most pedestrian predictors watch where a person has walked and extrapolate. By the time the path gives it away, the car has already lost reaction time.</p><p>Body language shows intent earlier: turning the head, leaning, a hand gesture. This project uses that to predict a crossing before the first step.</p></div>
+      <div><h2>What I built</h2><ul><li>Parsers for the JAAD (346 videos) and PIE driving datasets, checked against the real released files.</li><li>A CARLA simulator collector that records crossing scenarios with exact labels (222 episodes).</li><li>Pose features from MediaPipe, a scene-context encoder and a gesture taxonomy modelled on TITAN.</li><li>A small temporal transformer over 16-frame windows with an intent head and a trajectory head.</li><li>An ONNX export with a numerical round-trip check, and 59 unit tests.</li></ul></div>
+      <div><h2>Results</h2><ul><li>On real JAAD video (132,700 pedestrian-frames, 3 seeds, split strictly by video): <b>0.633 AP</b> with pose plus scene context, against <b>0.385 AP</b> for pose alone. The per-seed ranges do not overlap.</li><li>In CARLA simulation: 0.943 AP fused against 0.830 pose-only.</li><li>CARLA suggested a 2.5x bigger gain on occluded pedestrians. That did not reproduce on real video (0.8x), so I report it as a simulation-only effect.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">PyTorch</span><span class="chip">MediaPipe</span><span class="chip">CARLA 0.9.16</span><span class="chip">ONNX</span><span class="chip">OpenCV</span><span class="chip">pytest</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>1.5 s</b>warning before the step</li><li><b>0.633 AP</b>pose + scene, real video</li><li><b>133k</b>real pedestrian-frames</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><span></span><a href="intersection-negotiation-marl.html">Level 02: Two cars, one junction, no traffic lights &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A car that imagines before it acts | Thirunavukarasu P</title>
+<meta name="description" content="World-model reinforcement learning for traffic-scene anticipation. A small DreamerV3-style world model, written from scratch, that imagines a traffic scene 15 steps ahead to test manoeuvres before doing them.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/traffic-world-model.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="A car that imagines before it acts | Thirunavukarasu P">
+<meta property="og:description" content="World-model reinforcement learning for traffic-scene anticipation. A small DreamerV3-style world model, written from scratch, that imagines a traffic scene 15 steps ahead to test manoeuvres before doing them.">
+<meta property="og:url" content="https://thiru51.github.io/projects/traffic-world-model.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "World-model reinforcement learning for traffic-scene anticipation",
+ "alternateName": "A car that imagines before it acts",
+ "description": "A small DreamerV3-style world model, written from scratch, that imagines a traffic scene 15 steps ahead to test manoeuvres before doing them.",
+ "url": "https://thiru51.github.io/projects/traffic-world-model.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "World models, Model-based RL, MetaDrive, PyTorch, MetaDrive, Mixed precision, pixi",
+ "codeRepository": "https://github.com/thiru51/traffic-world-model"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 07</span>
+    <h1>A car that imagines before it acts</h1>
+    <p class="lede">World-model reinforcement learning for traffic-scene anticipation. A small DreamerV3-style world model, written from scratch, that imagines a traffic scene 15 steps ahead to test manoeuvres before doing them.</p>
+    <div class="meta"><span class="chip">World models</span><span class="chip">Model-based RL</span><span class="chip">MetaDrive</span><a class="chip gold" href="https://github.com/thiru51/traffic-world-model">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">Feasibility study on one consumer GPU. Complete.</p></div>
+      <div><h2>The problem</h2><p>Before a car changes lanes it would help to know how the scene will look a second or two later. A world model learns to predict that.</p><p>The question here: can this kind of model be shrunk to fit on one consumer GPU and still be useful?</p></div>
+      <div><h2>What I built</h2><ul><li>A recurrent state-space model with categorical latents, a GRU and a CNN encoder and decoder, in the style of DreamerV3. 11.2M parameters, all written from scratch.</li><li>400 scripted MetaDrive driving episodes (66,144 transitions) of top-down traffic views.</li><li>An imagine-then-act planner that rolls candidate manoeuvres 15 steps forward inside the model and scores them.</li></ul></div>
+      <div><h2>Results</h2><ul><li>On held-out episodes, imagined 15-step rollouts are <b>4.0x more accurate</b> than the persistence baseline (repeating the last frame).</li><li>Planning in imagination raised episode return but not safety, which points at the reward, not the model, as the limit.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">PyTorch</span><span class="chip">MetaDrive</span><span class="chip">Mixed precision</span><span class="chip">pixi</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>4.0x</b>better than persistence</li><li><b>15</b>imagined steps ahead</li><li><b>11.2M</b>parameters</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><a href="realtime-detection-tensorrt.html">&larr; Level 06: Making a robot&#x27;s eyes 3.5x faster</a><a href="speech-gesture-grounding.html">Level 08: &quot;Pull over there&quot; plus a pointing finger &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>

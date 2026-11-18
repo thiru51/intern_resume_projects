@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A robot dog that walks blind | Thirunavukarasu P</title>
+<meta name="description" content="Privileged-learning transformer policy for rough-terrain quadruped locomotion. A transformer policy that walks a four-legged robot over slopes and stairs using only what its joints feel. No camera, no lidar.">
+<meta name="author" content="Thirunavukarasu P">
+<link rel="canonical" href="https://thiru51.github.io/projects/blind-quadruped-locomotion.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="A robot dog that walks blind | Thirunavukarasu P">
+<meta property="og:description" content="Privileged-learning transformer policy for rough-terrain quadruped locomotion. A transformer policy that walks a four-legged robot over slopes and stairs using only what its joints feel. No camera, no lidar.">
+<meta property="og:url" content="https://thiru51.github.io/projects/blind-quadruped-locomotion.html">
+<meta property="og:image" content="https://thiru51.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14112a">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/plain" href="https://thiru51.github.io/llms.txt" title="Plain-text profile for AI assistants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "Privileged-learning transformer policy for rough-terrain quadruped locomotion",
+ "alternateName": "A robot dog that walks blind",
+ "description": "A transformer policy that walks a four-legged robot over slopes and stairs using only what its joints feel. No camera, no lidar.",
+ "url": "https://thiru51.github.io/projects/blind-quadruped-locomotion.html",
+ "author": {
+  "@type": "Person",
+  "name": "Thirunavukarasu P",
+  "url": "https://thiru51.github.io/"
+ },
+ "keywords": "Legged robots, PPO, Transformers, PyTorch, PPO, Isaac Gym, NumPy, pytest",
+ "codeRepository": "https://github.com/thiru51/rough-terrain-locomotion"
+}</script>
+</head>
+<body>
+<header class="hud">
+  <div class="wrap">
+    <a class="logo" href="../index.html"><span class="p1">P1</span>THIRU</a>
+    <nav aria-label="Main">
+      <a href="../index.html#levels">Projects</a>
+      <a href="../index.html#side-quests">Side quests</a>
+      <a href="../index.html#career">Experience</a>
+      <a href="../index.html#inventory">Skills</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="resume" href="../resume.html">Resume</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html#levels">&larr; Level select</a></div>
+  <div class="proj-head">
+    <span class="label">Level 04</span>
+    <h1>A robot dog that walks blind</h1>
+    <p class="lede">Privileged-learning transformer policy for rough-terrain quadruped locomotion. A transformer policy that walks a four-legged robot over slopes and stairs using only what its joints feel. No camera, no lidar.</p>
+    <div class="meta"><span class="chip">Legged robots</span><span class="chip">PPO</span><span class="chip">Transformers</span><a class="chip gold" href="https://github.com/thiru51/rough-terrain-locomotion">Code on GitHub &rarr;</a></div>
+  </div>
+  <div class="proj-body">
+    <div class="prose">
+      <div><h2>Status</h2><p class="status">In progress. The models, training pipeline, terrain generation and evaluation are written and tested. Large-scale training in Isaac Gym is the next step.</p></div>
+      <div><h2>The problem</h2><p>A blind robot on stairs has a memory problem. From one moment you can&#x27;t tell a step down from soft ground: both feel like &quot;the foot went lower than expected&quot;.</p><p>The robot needs to look back over its last few steps and weigh them by where it is in its gait. That makes it a sequence-modelling problem, so the policy is a transformer.</p></div>
+      <div><h2>What I built</h2><ul><li>A teacher policy, trained with PPO, that gets information the real robot never will: a height map, contact forces, true friction and mass.</li><li>A causal transformer student that sees only the last 20 control steps of joint sensing and predicts the teacher&#x27;s action.</li><li>Two-pass training: first the student copies the teacher, then the student drives and the teacher corrects it (DAgger-style), so it learns from its own mistakes.</li><li>PPO with generalised advantage estimation, written from scratch, plus latent-estimator and stacked-history baselines.</li><li>Leg odometry with slip detection, and a terrain curriculum of slopes, stairs and rough ground.</li></ul></div>
+      <div><h2>Results</h2><ul><li>The full pipeline runs end to end and 61 tests pass.</li><li>Training results will be added here once the Isaac Gym runs are done.</li></ul></div>
+      <div><h2>Tools</h2><div class="tools"><span class="chip">PyTorch</span><span class="chip">PPO</span><span class="chip">Isaac Gym</span><span class="chip">NumPy</span><span class="chip">pytest</span></div></div>
+    </div>
+    <aside class="scorecard" aria-label="Key numbers">
+      <span class="label">High scores</span>
+      <ul><li><b>12</b>motors at 50 Hz</li><li><b>20</b>steps of joint history</li><li><b>0</b>cameras used</li></ul>
+    </aside>
+  </div>
+  <div class="next-prev"><a href="robot-arm-demo-quality.html">&larr; Level 03: Which human demos teach a robot arm best?</a><a href="robotic-pipe-sorting.html">Level 05: Picking pipes out of a messy pile &rarr;</a></div>
+</div>
+
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Thirunavukarasu P &middot; Chennai, India</span>
+    <span><a href="https://github.com/thiru51">GitHub</a> &middot; <a href="https://www.linkedin.com/in/thirunavukarasu-p-65262827a/">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>
